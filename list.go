@@ -10,7 +10,7 @@ type List[T any] struct {
 	mux        sync.Mutex
 }
 
-// Create a new doubly linked list
+// NewList creates a new doubly linked list
 //
 //	emptyList := New[int]()
 //	initializedList := New(1, 2, 3, 4, 5)
@@ -22,7 +22,7 @@ func NewList[T any](data ...T) *List[T] {
 	return l
 }
 
-// Return the number of node in the list
+// Length returns the number of node in the list
 func (l *List[T]) Length() int {
 	l.mux.Lock()
 	defer l.mux.Unlock()
@@ -30,7 +30,7 @@ func (l *List[T]) Length() int {
 	return l.length
 }
 
-// Append a new node to at the end of the list
+// Append adds a new node after the end of the list
 func (l *List[T]) Append(data T) {
 	l.mux.Lock()
 	defer l.mux.Unlock()
@@ -43,6 +43,23 @@ func (l *List[T]) Append(data T) {
 		newNode.left = l.tail
 		l.tail.right = newNode
 		l.tail = newNode
+	}
+	l.length++
+}
+
+// Prepend adds a new node before the start of the list
+func (l *List[T]) Prepend(data T) {
+	l.mux.Lock()
+	defer l.mux.Unlock()
+
+	newNode := &Node[T]{data: data}
+	if l.head == nil {
+		l.head = newNode
+		l.tail = newNode
+	} else {
+		newNode.right = l.head
+		l.head.left = newNode
+		l.head = newNode
 	}
 	l.length++
 }
