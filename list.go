@@ -243,7 +243,7 @@ func (l *List[T]) Pop() (T, error) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 
-	if l.length == 0 {
+	if l.isEmpty() {
 		var value T
 		return value, &ErrIsEmpty{msg: "list is empty"}
 	}
@@ -259,7 +259,7 @@ func (l *List[T]) pop() (T, error) {
 
 	l.length--
 	// Popped the last value
-	if l.length == 0 {
+	if l.isEmpty() {
 		l.head = nil
 		l.tail = nil
 	}
@@ -273,7 +273,7 @@ func (l *List[T]) Dequeue() (T, error) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 
-	if l.length == 0 {
+	if l.isEmpty() {
 		var value T
 		return value, &ErrIsEmpty{msg: "list is empty"}
 	}
@@ -289,7 +289,7 @@ func (l *List[T]) dequeue() (T, error) {
 
 	// Dequeued the last value
 	l.length--
-	if l.length == 0 {
+	if l.isEmpty() {
 		l.tail = nil
 		l.head = nil
 	}
@@ -306,7 +306,7 @@ func (l *List[T]) Remove(at int) (T, error) {
 
 	var value T
 	// Check if index is valid
-	if l.length == 0 {
+	if l.isEmpty() {
 		return value, &ErrIsEmpty{msg: "list is empty"}
 	}
 	if err := l.checkIndex(at); err != nil {
