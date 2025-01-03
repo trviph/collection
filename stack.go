@@ -20,16 +20,26 @@ func (s *Stack[T]) Length() int {
 }
 
 // Push a list of values in to the stack, starting from left to right.
-func (s *Stack[T]) Push(values ...T) {}
+func (s *Stack[T]) Push(values ...T) {
+	s.list.Append(values...)
+}
 
 // Pop get the value of the last push, and remove the value from the stack.
+// If the stack is empty return [ErrIsEmpty] as an error.
 func (s *Stack[T]) Pop() (T, error) {
 	var value T
-	return value, nil
+	if s.list.Length() == 0 {
+		return value, &ErrIsEmpty{msg: "stack is empty"}
+	}
+	return s.list.Pop()
 }
 
 // Top get the value of the last push but does not remove the value from the stack.
+// If the stack is empty return [ErrIsEmpty] as an error.
 func (s *Stack[T]) Top() (T, error) {
 	var value T
-	return value, nil
+	if s.list.Length() == 0 {
+		return value, &ErrIsEmpty{msg: "stack is empty"}
+	}
+	return s.list.Index(s.Length() - 1)
 }
