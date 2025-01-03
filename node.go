@@ -1,13 +1,14 @@
+// Collection is a Go library aim to implement some basic data structure such as List, Queue, Stack, Heap and more.
 package collection
 
-type Node[T any] struct {
-	data T
+type node[T any] struct {
+	value T
 	// Left node or previous node
-	left *Node[T]
+	left *node[T]
 	// Right node or next node
-	right *Node[T]
+	right *node[T]
 }
 
-func (n *Node[T]) Val() T {
-	return n.data
+func (n *node[T]) Val() T {
+	return n.value
 }
