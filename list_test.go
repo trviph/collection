@@ -36,12 +36,11 @@ func TestListLength(t *testing.T) {
 
 func TestListAppend(t *testing.T) {
 	list := collection.NewList[int]()
+	list.Append()
 	list.Append(1)
 	list.Append(2)
 	list.Append(3)
-	list.Append(4)
-	list.Append(5)
-	list.Append(6)
+	list.Append(4, 5, 6)
 	want := []int{1, 2, 3, 4, 5, 6}
 
 	for idx, got := range list.All() {

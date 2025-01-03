@@ -37,21 +37,23 @@ func (l *List[T]) Length() int {
 	return l.length
 }
 
-// Append a new node to at the end of the list
-func (l *List[T]) Append(data T) {
+// Append new nodes to at the end of the list
+func (l *List[T]) Append(data ...T) {
 	l.mux.Lock()
 	defer l.mux.Unlock()
 
-	newNode := &Node[T]{data: data}
-	if l.head == nil {
-		l.head = newNode
-		l.tail = newNode
-	} else {
-		newNode.left = l.tail
-		l.tail.right = newNode
-		l.tail = newNode
+	for _, d := range data {
+		newNode := &Node[T]{data: d}
+		if l.head == nil {
+			l.head = newNode
+			l.tail = newNode
+		} else {
+			newNode.left = l.tail
+			l.tail.right = newNode
+			l.tail = newNode
+		}
+		l.length++
 	}
-	l.length++
 }
 
 // [All] return an iterator of elements in list going from head to tail.
