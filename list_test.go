@@ -41,7 +41,15 @@ func TestListAppend(t *testing.T) {
 	list.Append(4, 5, 6)
 	want := []int{1, 2, 3, 4, 5, 6}
 
+	// Test to see if nodes are linked properly
 	for idx, got := range list.All() {
+		if want[idx] != got {
+			t.Errorf(testFailedMsg, "TestListAppend", want[idx], got)
+		}
+	}
+
+	// Test to see if nodes are linked properly
+	for idx, got := range list.Backward() {
 		if want[idx] != got {
 			t.Errorf(testFailedMsg, "TestListAppend", want[idx], got)
 		}
@@ -57,7 +65,15 @@ func TestListPrepend(t *testing.T) {
 	list.Prepend(3, 2, 1)
 	want := []int{1, 2, 3, 4, 5, 6}
 
+	// Test to see if nodes are linked properly
 	for idx, got := range list.All() {
+		if want[idx] != got {
+			t.Errorf(testFailedMsg, "TestListPrepend", want[idx], got)
+		}
+	}
+
+	// Test to see if nodes are linked properly
+	for idx, got := range list.Backward() {
 		if want[idx] != got {
 			t.Errorf(testFailedMsg, "TestListPrepend", want[idx], got)
 		}
@@ -65,7 +81,7 @@ func TestListPrepend(t *testing.T) {
 }
 
 func TestListInsert(t *testing.T) {
-	list := collection.NewList[int](1, 3, 6)
+	list := collection.NewList(1, 3, 6)
 
 	// This make the list [1, 2, 3, 6]
 	value, at := 2, 0
@@ -102,9 +118,17 @@ func TestListInsert(t *testing.T) {
 	}
 
 	want := []int{1, 2, 3, 4, 5, 6}
+	// Test to see if nodes are linked properly
 	for idx, got := range list.All() {
 		if want[idx] != got {
-			t.Errorf(testFailedMsg, "TestListPrepend", want[idx], got)
+			t.Errorf(testFailedMsg, "TestListInsert", want[idx], got)
+		}
+	}
+
+	// Test to see if nodes are linked properly
+	for idx, got := range list.Backward() {
+		if want[idx] != got {
+			t.Errorf(testFailedMsg, "TestListInsert", want[idx], got)
 		}
 	}
 }
@@ -212,20 +236,36 @@ func TestListIndex(t *testing.T) {
 }
 
 func TestListPop(t *testing.T) {
-	list := collection.NewList(1, 2, 3, 4, 5)
-	want := []int{5, 4, 3, 2, 1}
+	list := collection.NewList(1, 2, 3, 4, 5, 6)
 
-	for _, w := range want {
-		gotValue, gotErr := list.Pop()
-		if w != gotValue {
-			t.Errorf(testFailedMsg, "TestListPop", w, gotValue)
-		}
-		if gotErr != nil {
-			t.Errorf(testFailedMsg, "TestListPop", "nil error", gotErr)
+	// Pop a value
+	wantPopValue := 6
+	gotValue, gotErr := list.Pop()
+	if wantPopValue != gotValue {
+		t.Errorf(testFailedMsg, "TestListPop", wantPopValue, gotValue)
+	}
+	if gotErr != nil {
+		t.Errorf(testFailedMsg, "TestListPop", "nil error", gotErr)
+	}
+
+	// Test to see if nodes are linked properly
+	want := []int{1, 2, 3, 4, 5}
+	for idx, got := range list.All() {
+		if want[idx] != got {
+			t.Errorf(testFailedMsg, "TestListPop", want[idx], got)
 		}
 	}
 
-	_, gotErr := list.Pop()
+	// Test to see if nodes are linked properly
+	for idx, got := range list.Backward() {
+		if want[idx] != got {
+			t.Errorf(testFailedMsg, "TestListPop", want[idx], got)
+		}
+	}
+
+	// Pop on empty list
+	emptyList := collection.NewList[int]()
+	_, gotErr = emptyList.Pop()
 	wantErr := error(&collection.ErrIsEmpty{})
 	if _, ok := gotErr.(*collection.ErrIsEmpty); !ok {
 		t.Errorf(testFailedMsg, "TestListPop", wantErr, gotErr)
@@ -233,20 +273,36 @@ func TestListPop(t *testing.T) {
 }
 
 func TestListDequeue(t *testing.T) {
-	list := collection.NewList(1, 2, 3, 4, 5)
-	want := []int{1, 2, 3, 4, 5}
+	list := collection.NewList(1, 2, 3, 4, 5, 6)
 
-	for _, w := range want {
-		gotValue, gotErr := list.Dequeue()
-		if w != gotValue {
-			t.Errorf(testFailedMsg, "TestListDequeue", w, gotValue)
-		}
-		if gotErr != nil {
-			t.Errorf(testFailedMsg, "TestListDequeue", "nil error", gotErr)
+	// Dequeue a value
+	wantDequeueValue := 1
+	gotValue, gotErr := list.Dequeue()
+	if wantDequeueValue != gotValue {
+		t.Errorf(testFailedMsg, "TestListDequeue", wantDequeueValue, gotValue)
+	}
+	if gotErr != nil {
+		t.Errorf(testFailedMsg, "TestListDequeue", "nil error", gotErr)
+	}
+
+	// Test to see if nodes are linked properly
+	want := []int{2, 3, 4, 5, 6}
+	for idx, got := range list.All() {
+		if want[idx] != got {
+			t.Errorf(testFailedMsg, "TestListDequeue", want[idx], got)
 		}
 	}
 
-	_, gotErr := list.Dequeue()
+	// Test to see if nodes are linked properly
+	for idx, got := range list.Backward() {
+		if want[idx] != got {
+			t.Errorf(testFailedMsg, "TestListDequeue", want[idx], got)
+		}
+	}
+
+	// Pop on empty list
+	emptyList := collection.NewList[int]()
+	_, gotErr = emptyList.Dequeue()
 	wantErr := error(&collection.ErrIsEmpty{})
 	if _, ok := gotErr.(*collection.ErrIsEmpty); !ok {
 		t.Errorf(testFailedMsg, "TestListDequeue", wantErr, gotErr)
@@ -254,11 +310,10 @@ func TestListDequeue(t *testing.T) {
 }
 
 func TestListRemove(t *testing.T) {
-	list := collection.NewList(1, 2, 3, 4, 5)
-
-	// This make the list become [1, 2, 4, 5]
-	gotValue, gotErr := list.Remove(2)
-	wantValue := 3
+	list := collection.NewList(1, 1, 2, 2, 2, 3, 4, 5, 5)
+	// Use Remove(0) same effect as Dequeue(), this make the list become [1, 2, 2, 2, 3, 4, 5, 5]
+	gotValue, gotErr := list.Remove(0)
+	wantValue := 1
 	if wantValue != gotValue {
 		t.Errorf(testFailedMsg, "TestListRemove", wantValue, gotValue)
 	}
@@ -266,19 +321,59 @@ func TestListRemove(t *testing.T) {
 		t.Errorf(testFailedMsg, "TestListRemove", "nil error", gotErr)
 	}
 
-	want := []int{1, 2, 4, 5}
+	// Use Remove(length-1) same effect as Pop(), this make the list become [1, 2, 2, 2, 3, 4, 5]
+	gotValue, gotErr = list.Remove(list.Length() - 1)
+	wantValue = 5
+	if wantValue != gotValue {
+		t.Errorf(testFailedMsg, "TestListRemove", wantValue, gotValue)
+	}
+	if gotErr != nil {
+		t.Errorf(testFailedMsg, "TestListRemove", "nil error", gotErr)
+	}
+
+	// This make the list become [1, 2, 2, 3, 4, 5]
+	gotValue, gotErr = list.Remove(1)
+	wantValue = 2
+	if wantValue != gotValue {
+		t.Errorf(testFailedMsg, "TestListRemove", wantValue, gotValue)
+	}
+	if gotErr != nil {
+		t.Errorf(testFailedMsg, "TestListRemove", "nil error", gotErr)
+	}
+
+	// This make the list become [1, 2, 3, 4, 5]
+	gotValue, gotErr = list.Remove(1)
+	wantValue = 2
+	if wantValue != gotValue {
+		t.Errorf(testFailedMsg, "TestListRemove", wantValue, gotValue)
+	}
+	if gotErr != nil {
+		t.Errorf(testFailedMsg, "TestListRemove", "nil error", gotErr)
+	}
+
+	// Test to see if nodes are linked properly
+	want := []int{1, 2, 3, 4, 5}
 	for idx, got := range list.All() {
 		if want[idx] != got {
 			t.Errorf(testFailedMsg, "TestListRemove", want[idx], got)
 		}
 	}
 
+	// Test to see if nodes are linked properly
+	for idx, got := range list.Backward() {
+		if want[idx] != got {
+			t.Errorf(testFailedMsg, "TestListRemove", want[idx], got)
+		}
+	}
+
+	// Remove with out-of-range index
 	_, gotErr = list.Remove(list.Length())
 	wantErr := error(&collection.ErrIndexOutOfRange{})
 	if _, ok := gotErr.(*collection.ErrIndexOutOfRange); !ok {
 		t.Errorf(testFailedMsg, "TestListRemove", wantErr, gotErr)
 	}
 
+	// Remove on empty list
 	emptyList := collection.NewList[int]()
 	_, gotErr = emptyList.Remove(emptyList.Length())
 	wantErr = error(&collection.ErrIsEmpty{})
