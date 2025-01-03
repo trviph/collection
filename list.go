@@ -15,6 +15,9 @@ type List[T any] struct {
 	mux        sync.Mutex
 }
 
+// Interface guard
+var _ list[any] = (*List[any])(nil)
+
 // [NewList] creates a new doubly linked [List].
 // All operation on [List] should be thread-safe,
 // because it only allow one goroutine at a time to access it data.
@@ -82,7 +85,7 @@ func (l *List[T]) Prepend(values ...T) {
 // Insert adds a new node after the node at a specified index.
 // If the index is less than zero or greater than or equal the current length of the list,
 // then this function will return an [ErrIndexOutOfRange] error.
-// If you want to insert at the start or at the end of the list use [Prepend] or [Append] instead.
+// If you want to insert at the start or at the end of the list use [List.Prepend] or [List.Append] instead.
 func (l *List[T]) Insert(value T, at int) error {
 	l.mux.Lock()
 	defer l.mux.Unlock()
