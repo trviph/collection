@@ -186,6 +186,26 @@ func (l *List[T]) Backward() iter.Seq2[int, T] {
 	}
 }
 
+// This is similar to [Backward], there is however three differences.
+// First this is private method,
+// second that this function return a [node] instead of a value of type T,
+// and third it does not using [sync.Mutex] to lock access.
+// The [sync.Mutex] lock should only be called and managed by a public method to avoid
+// race condition and deadlock.
+func (l *List[T]) backward() iter.Seq2[int, *node[T]] {
+	return func(yield func(int, *node[T]) bool) {
+		curr := l.tail
+		idx := l.length - 1
+		for curr != nil {
+			if !yield(idx, curr) {
+				break
+			}
+			curr = curr.left
+			idx--
+		}
+	}
+}
+
 // Search searches for a value in the list.
 // It takes the target to search for and the equal function.
 // The equal function takes two arguments value and target,
@@ -243,7 +263,7 @@ func (l *List[T]) Pop() (T, error) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 
-	if l.length == 0 {
+	if l.isEmpty() {
 		var value T
 		return value, &ErrIsEmpty{msg: "list is empty"}
 	}
@@ -259,7 +279,7 @@ func (l *List[T]) pop() (T, error) {
 
 	l.length--
 	// Popped the last value
-	if l.length == 0 {
+	if l.isEmpty() {
 		l.head = nil
 		l.tail = nil
 	}
@@ -273,7 +293,7 @@ func (l *List[T]) Dequeue() (T, error) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 
-	if l.length == 0 {
+	if l.isEmpty() {
 		var value T
 		return value, &ErrIsEmpty{msg: "list is empty"}
 	}
@@ -289,7 +309,7 @@ func (l *List[T]) dequeue() (T, error) {
 
 	// Dequeued the last value
 	l.length--
-	if l.length == 0 {
+	if l.isEmpty() {
 		l.tail = nil
 		l.head = nil
 	}
@@ -306,7 +326,7 @@ func (l *List[T]) Remove(at int) (T, error) {
 
 	var value T
 	// Check if index is valid
-	if l.length == 0 {
+	if l.isEmpty() {
 		return value, &ErrIsEmpty{msg: "list is empty"}
 	}
 	if err := l.checkIndex(at); err != nil {
@@ -340,7 +360,16 @@ func (l *List[T]) Remove(at int) (T, error) {
 // Get the node at the specified index, should be called after [checkIndex]
 // to avoid null pointer error.
 func (l *List[T]) getNode(at int) *node[T] {
-	for idx, node := range l.all() {
+	// If the specified index in the left half of the list then
+	// we should iterate from head -> tail.
+	it := l.all
+	// Else if the specified index in the right half of the list then
+	// we should iterate from tail -> head.
+	if at > (l.length / 2) {
+		it = l.backward
+	}
+
+	for idx, node := range it() {
 		if idx == at {
 			return node
 		}
