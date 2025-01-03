@@ -88,7 +88,7 @@ func TestListInsert(t *testing.T) {
 	}
 
 	// This should failed, because index is out of range
-	value, at = 99, 99
+	value, at = 99, list.Length()
 	err := list.Insert(value, at)
 	if _, ok := err.(*collection.ErrIndexOutOfRange); !ok {
 		var wantErr error = &collection.ErrIndexOutOfRange{}
@@ -259,7 +259,7 @@ func TestListSearch(t *testing.T) {
 
 	gotIDX, gotErr := list.Search(4, equal)
 	wantIDX := -1
-	wantErr := &collection.ErrNotFound{}
+	wantErr := error(&collection.ErrNotFound{})
 	if gotIDX != wantIDX {
 		t.Errorf(testFailedMsg, "TestListSearch", wantIDX, gotIDX)
 	}
@@ -292,8 +292,8 @@ func TestListIndex(t *testing.T) {
 		}
 	}
 
-	_, gotErr := list.Index(99)
-	wantErr := &collection.ErrIndexOutOfRange{}
+	_, gotErr := list.Index(list.Length())
+	wantErr := error(&collection.ErrIndexOutOfRange{})
 	if _, ok := gotErr.(*collection.ErrIndexOutOfRange); !ok {
 		t.Errorf(testFailedMsg, "TestListIndex", wantErr, gotErr)
 	}
@@ -314,7 +314,7 @@ func TestListPop(t *testing.T) {
 	}
 
 	_, gotErr := list.Pop()
-	wantErr := &collection.ErrIsEmpty{}
+	wantErr := error(&collection.ErrIsEmpty{})
 	if _, ok := gotErr.(*collection.ErrIsEmpty); !ok {
 		t.Errorf(testFailedMsg, "TestListPop", wantErr, gotErr)
 	}
@@ -335,8 +335,42 @@ func TestListDequeue(t *testing.T) {
 	}
 
 	_, gotErr := list.Dequeue()
-	wantErr := &collection.ErrIsEmpty{}
+	wantErr := error(&collection.ErrIsEmpty{})
 	if _, ok := gotErr.(*collection.ErrIsEmpty); !ok {
 		t.Errorf(testFailedMsg, "TestListDequeue", wantErr, gotErr)
+	}
+}
+
+func TestListRemove(t *testing.T) {
+	list := collection.NewList(1, 2, 3, 4, 5)
+
+	// This make the list become [1, 2, 4, 5]
+	gotValue, gotErr := list.Remove(2)
+	wantValue := 3
+	if wantValue != gotValue {
+		t.Errorf(testFailedMsg, "TestListRemove", wantValue, gotValue)
+	}
+	if gotErr != nil {
+		t.Errorf(testFailedMsg, "TestListRemove", "nil error", gotErr)
+	}
+
+	want := []int{1, 2, 4, 5}
+	for idx, got := range list.All() {
+		if want[idx] != got {
+			t.Errorf(testFailedMsg, "TestListRemove", want[idx], got)
+		}
+	}
+
+	_, gotErr = list.Remove(list.Length())
+	wantErr := error(&collection.ErrIndexOutOfRange{})
+	if _, ok := gotErr.(*collection.ErrIndexOutOfRange); !ok {
+		t.Errorf(testFailedMsg, "TestListRemove", wantErr, gotErr)
+	}
+
+	emptyList := collection.NewList[int]()
+	_, gotErr = emptyList.Remove(emptyList.Length())
+	wantErr = error(&collection.ErrIsEmpty{})
+	if _, ok := gotErr.(*collection.ErrIsEmpty); !ok {
+		t.Errorf(testFailedMsg, "TestListRemove", wantErr, gotErr)
 	}
 }

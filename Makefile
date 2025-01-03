@@ -7,7 +7,7 @@ lint:
 	golangci-lint run
 
 test: lint
-	go test -coverprofile=./test_profile ./... 
+	go test -race -coverprofile=./test_profile ./... 
 
 cover: test
 	go tool cover -html=./test_profile && unlink ./test_profile
