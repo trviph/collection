@@ -24,3 +24,11 @@ type stack[T any] interface {
 	Pop() (T, error)
 	Top() (T, error)
 }
+
+type queue[T any] interface {
+	Length() int
+	Push(values ...T)
+	Dequeue() (T, error)
+	Front() (T, error)
+	Rear() (T, error)
+}
