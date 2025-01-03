@@ -215,3 +215,49 @@ func (l *List[T]) checkIndex(at int) error {
 	}
 	return nil
 }
+
+// [Pop] removes and returns the last element of the list.
+// If the list is empty then return [ErrIsEmpty] as an error.
+func (l *List[T]) Pop() (T, error) {
+	l.mux.Lock()
+	defer l.mux.Unlock()
+
+	var value T
+	if l.length == 0 {
+		return value, &ErrIsEmpty{msg: "list is empty"}
+	}
+
+	value = l.tail.value
+	l.tail = l.tail.left
+	l.length--
+
+	// Popped the last value
+	if l.length == 0 {
+		l.head = nil
+	}
+
+	return value, nil
+}
+
+// [Dequeue] removes and returns the first element of the list.
+// If the list is empty then return [ErrIsEmpty] as an error.
+func (l *List[T]) Dequeue() (T, error) {
+	l.mux.Lock()
+	defer l.mux.Unlock()
+
+	var value T
+	if l.length == 0 {
+		return value, &ErrIsEmpty{msg: "list is empty"}
+	}
+
+	value = l.head.value
+	l.head = l.head.right
+	l.length--
+
+	// Dequeued the last value
+	if l.length == 0 {
+		l.tail = nil
+	}
+
+	return value, nil
+}

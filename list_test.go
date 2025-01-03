@@ -298,3 +298,45 @@ func TestListIndex(t *testing.T) {
 		t.Errorf(testFailedMsg, "TestListIndex", wantErr, gotErr)
 	}
 }
+
+func TestListPop(t *testing.T) {
+	list := collection.NewList(1, 2, 3, 4, 5)
+	want := []int{5, 4, 3, 2, 1}
+
+	for _, w := range want {
+		gotValue, gotErr := list.Pop()
+		if w != gotValue {
+			t.Errorf(testFailedMsg, "TestListPop", w, gotValue)
+		}
+		if gotErr != nil {
+			t.Errorf(testFailedMsg, "TestListPop", "nil error", gotErr)
+		}
+	}
+
+	_, gotErr := list.Pop()
+	wantErr := &collection.ErrIsEmpty{}
+	if _, ok := gotErr.(*collection.ErrIsEmpty); !ok {
+		t.Errorf(testFailedMsg, "TestListPop", wantErr, gotErr)
+	}
+}
+
+func TestListDequeue(t *testing.T) {
+	list := collection.NewList(1, 2, 3, 4, 5)
+	want := []int{1, 2, 3, 4, 5}
+
+	for _, w := range want {
+		gotValue, gotErr := list.Dequeue()
+		if w != gotValue {
+			t.Errorf(testFailedMsg, "TestListDequeue", w, gotValue)
+		}
+		if gotErr != nil {
+			t.Errorf(testFailedMsg, "TestListDequeue", "nil error", gotErr)
+		}
+	}
+
+	_, gotErr := list.Dequeue()
+	wantErr := &collection.ErrIsEmpty{}
+	if _, ok := gotErr.(*collection.ErrIsEmpty); !ok {
+		t.Errorf(testFailedMsg, "TestListDequeue", wantErr, gotErr)
+	}
+}
