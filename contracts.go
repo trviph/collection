@@ -17,3 +17,10 @@ type list[T any] interface {
 	Dequeue() (T, error)
 	Remove(at int) (T, error)
 }
+
+type stack[T any] interface {
+	Length() int
+	Push(values ...T)
+	Pop() (T, error)
+	Top() (T, error)
+}
