@@ -10,10 +10,13 @@ import (
 // All operation on [List] should be thread-safe,
 // because it only allow one goroutine at a time to access it data.
 type List[T any] struct {
+	mu         sync.RWMutex
 	length     int
 	head, tail *node[T]
-	mux        sync.Mutex
 }
+
+// Interface guard
+var _ list[any] = (*List[any])(nil)
 
 // [NewList] creates a new doubly linked [List].
 // All operation on [List] should be thread-safe,
@@ -31,64 +34,73 @@ func NewList[T any](values ...T) *List[T] {
 
 // Length returns the number of node in the list.
 func (l *List[T]) Length() int {
-	l.mux.Lock()
-	defer l.mux.Unlock()
-
+	l.mu.RLock()
+	defer l.mu.RUnlock()
 	return l.length
 }
 
 // Append adds new nodes to at the end of the list
 func (l *List[T]) Append(values ...T) {
-	l.mux.Lock()
-	defer l.mux.Unlock()
+	l.mu.Lock()
+	defer l.mu.Unlock()
 
 	for _, value := range values {
-		newNode := &node[T]{value: value}
-		// If there is no head, meaning the current list is empty,
-		// then insert as head.
-		if l.head == nil {
-			l.head = newNode
-			l.tail = newNode
-		} else {
-			newNode.left = l.tail
-			l.tail.right = newNode
-			l.tail = newNode
-		}
+		l.append(value)
 	}
-	l.length += len(values)
+}
+
+func (l *List[T]) append(value T) {
+	newNode := &node[T]{value: value}
+	if l.isEmpty() {
+		l.head = newNode
+		l.tail = newNode
+	} else {
+		newNode.left = l.tail
+		l.tail.right = newNode
+		l.tail = newNode
+	}
+	l.length++
 }
 
 // Prepend adds a new node at the start of the list.
 func (l *List[T]) Prepend(values ...T) {
-	l.mux.Lock()
-	defer l.mux.Unlock()
+	l.mu.Lock()
+	defer l.mu.Unlock()
 
 	for _, value := range values {
-		newNode := &node[T]{value: value}
-		// If there is no head, meaning the current list is empty,
-		// then insert as head.
-		if l.head == nil {
-			l.head = newNode
-			l.tail = newNode
-		} else {
-			newNode.right = l.head
-			l.head.left = newNode
-			l.head = newNode
-		}
+		l.prepend(value)
 	}
-	l.length += len(values)
+}
+
+func (l *List[T]) prepend(value T) {
+	newNode := &node[T]{value: value}
+	if l.isEmpty() {
+		l.head = newNode
+		l.tail = newNode
+	} else {
+		newNode.right = l.head
+		l.head.left = newNode
+		l.head = newNode
+	}
+	l.length++
 }
 
 // Insert adds a new node after the node at a specified index.
 // If the index is less than zero or greater than or equal the current length of the list,
 // then this function will return an [ErrIndexOutOfRange] error.
-// If you want to insert at the start or at the end of the list use [Prepend] or [Append] instead.
+// If you want to insert at the start of the list use [List.Prepend] instead.
 func (l *List[T]) Insert(value T, at int) error {
-	l.mux.Lock()
-	defer l.mux.Unlock()
+	l.mu.Lock()
+	defer l.mu.Unlock()
 
 	if err := l.checkIndex(at); err != nil {
 		return err
+	}
+
+	// Edge case insert after tail, then append
+	if at == l.length-1 {
+		l.append(value)
+		return nil
 	}
 
 	// Get the node at index specified by idx.
@@ -100,11 +112,11 @@ func (l *List[T]) Insert(value T, at int) error {
 	// Merge newNode in the the list after the currNode.
 	newNode.right = idxNode.right
 	newNode.left = idxNode
+	idxNode.right.left = newNode
 	idxNode.right = newNode
 
 	// Increase length by one.
 	l.length++
-
 	return nil
 }
 
@@ -116,14 +128,14 @@ func (l *List[T]) Insert(value T, at int) error {
 //	}
 func (l *List[T]) All() iter.Seq2[int, T] {
 	return func(yield func(int, T) bool) {
-		l.mux.Lock()
-		defer l.mux.Unlock()
+		l.mu.RLock()
+		defer l.mu.RUnlock()
 
 		curr := l.head
 		idx := 0
 		for curr != nil {
 			if !yield(idx, curr.value) {
-				return
+				break
 			}
 			curr = curr.right
 			idx++
@@ -143,7 +155,7 @@ func (l *List[T]) all() iter.Seq2[int, *node[T]] {
 		idx := 0
 		for curr != nil {
 			if !yield(idx, curr) {
-				return
+				break
 			}
 			curr = curr.right
 			idx++
@@ -159,14 +171,14 @@ func (l *List[T]) all() iter.Seq2[int, *node[T]] {
 //	}
 func (l *List[T]) Backward() iter.Seq2[int, T] {
 	return func(yield func(int, T) bool) {
-		l.mux.Lock()
-		defer l.mux.Unlock()
+		l.mu.RLock()
+		defer l.mu.RUnlock()
 
 		curr := l.tail
 		idx := l.length - 1
 		for curr != nil {
 			if !yield(idx, curr.value) {
-				return
+				break
 			}
 			curr = curr.left
 			idx--
@@ -198,8 +210,8 @@ func (l *List[T]) Backward() iter.Seq2[int, T] {
 //		  // code goes here
 //	 }
 func (l *List[T]) Search(target T, equal func(value, target T) bool) (int, error) {
-	l.mux.Lock()
-	defer l.mux.Unlock()
+	l.mu.RLock()
+	defer l.mu.RUnlock()
 
 	for idx, node := range l.all() {
 		if equal(node.value, target) {
@@ -212,40 +224,44 @@ func (l *List[T]) Search(target T, equal func(value, target T) bool) (int, error
 // Index gets value at the specified index.
 // If the index is out of range, it will return [ErrIndexOutOfRange] as error.
 func (l *List[T]) Index(at int) (T, error) {
-	l.mux.Lock()
-	defer l.mux.Unlock()
+	l.mu.RLock()
+	defer l.mu.RUnlock()
 
 	var res T
 	if err := l.checkIndex(at); err != nil {
 		return res, err
 	}
-	for idx, node := range l.all() {
-		if idx == at {
-			res = node.value
-			break
-		}
-	}
+	node := l.getNode(at)
+
+	res = node.value
 	return res, nil
 }
 
 // Pop removes and returns the last element of the list.
 // If the list is empty then return [ErrIsEmpty] as an error.
 func (l *List[T]) Pop() (T, error) {
-	l.mux.Lock()
-	defer l.mux.Unlock()
+	l.mu.Lock()
+	defer l.mu.Unlock()
 
-	var value T
 	if l.length == 0 {
+		var value T
 		return value, &ErrIsEmpty{msg: "list is empty"}
 	}
+	return l.pop()
+}
 
-	value = l.tail.value
+func (l *List[T]) pop() (T, error) {
+	value := l.tail.value
 	l.tail = l.tail.left
-	l.length--
+	if l.tail != nil {
+		l.tail.right = nil
+	}
 
+	l.length--
 	// Popped the last value
 	if l.length == 0 {
 		l.head = nil
+		l.tail = nil
 	}
 
 	return value, nil
@@ -254,21 +270,28 @@ func (l *List[T]) Pop() (T, error) {
 // Dequeue removes and returns the first element of the list.
 // If the list is empty then return [ErrIsEmpty] as an error.
 func (l *List[T]) Dequeue() (T, error) {
-	l.mux.Lock()
-	defer l.mux.Unlock()
+	l.mu.Lock()
+	defer l.mu.Unlock()
 
-	var value T
 	if l.length == 0 {
+		var value T
 		return value, &ErrIsEmpty{msg: "list is empty"}
 	}
+	return l.dequeue()
+}
 
-	value = l.head.value
+func (l *List[T]) dequeue() (T, error) {
+	value := l.head.value
 	l.head = l.head.right
-	l.length--
+	if l.head != nil {
+		l.head.left = nil
+	}
 
 	// Dequeued the last value
+	l.length--
 	if l.length == 0 {
 		l.tail = nil
+		l.head = nil
 	}
 
 	return value, nil
@@ -278,8 +301,8 @@ func (l *List[T]) Dequeue() (T, error) {
 // If the index is out of range then return [ErrIndexOutOfRange] as an error.
 // Or if the list is empty then return [ErrIsEmpty] as an error.
 func (l *List[T]) Remove(at int) (T, error) {
-	l.mux.Lock()
-	defer l.mux.Unlock()
+	l.mu.Lock()
+	defer l.mu.Unlock()
 
 	var value T
 	// Check if index is valid
@@ -288,6 +311,16 @@ func (l *List[T]) Remove(at int) (T, error) {
 	}
 	if err := l.checkIndex(at); err != nil {
 		return value, err
+	}
+
+	// If Remove(0) then dequeue
+	if at == 0 {
+		return l.dequeue()
+	}
+
+	// If remove(lastIDX) then pop
+	if at == l.length-1 {
+		return l.pop()
 	}
 
 	// Get the node at the specified index
@@ -312,7 +345,7 @@ func (l *List[T]) getNode(at int) *node[T] {
 			return node
 		}
 	}
-	return nil
+	panic("what")
 }
 
 func (l *List[T]) checkIndex(at int) error {
@@ -324,4 +357,8 @@ func (l *List[T]) checkIndex(at int) error {
 		}
 	}
 	return nil
+}
+
+func (l *List[T]) isEmpty() bool {
+	return l.length == 0
 }
