@@ -70,34 +70,34 @@ func TestListInsert(t *testing.T) {
 	list := collection.NewList[int](1, 3, 6)
 
 	// This make the list [1, 2, 3, 6]
-	data, at := 2, 0
-	if err := list.Insert(data, at); err != nil {
+	value, at := 2, 0
+	if err := list.Insert(value, at); err != nil {
 		t.Errorf(testFailedMsg, "TestListInsert", "nil error", err)
 	}
 
 	// This make the list [1, 2, 3, 4, 6]
-	data, at = 4, 2
-	if err := list.Insert(data, at); err != nil {
+	value, at = 4, 2
+	if err := list.Insert(value, at); err != nil {
 		t.Errorf(testFailedMsg, "TestListInsert", "nil error", err)
 	}
 
 	// This make the list [1, 2, 3, 4, 5, 6]
-	data, at = 5, 3
-	if err := list.Insert(data, at); err != nil {
+	value, at = 5, 3
+	if err := list.Insert(value, at); err != nil {
 		t.Errorf(testFailedMsg, "TestListInsert", "nil error", err)
 	}
 
 	// This should failed, because index is out of range
-	data, at = 99, 99
-	err := list.Insert(data, at)
+	value, at = 99, 99
+	err := list.Insert(value, at)
 	if _, ok := err.(*collection.ErrIndexOutOfRange); !ok {
 		var wantErr error = &collection.ErrIndexOutOfRange{}
 		t.Errorf(testFailedMsg, "TestListInsert", wantErr, err)
 	}
 
 	// This should failed, because index is negative
-	data, at = -1, -1
-	err = list.Insert(data, at)
+	value, at = -1, -1
+	err = list.Insert(value, at)
 	if _, ok := err.(*collection.ErrIndexOutOfRange); !ok {
 		var wantErr error = &collection.ErrIndexOutOfRange{}
 		t.Errorf(testFailedMsg, "TestListInsert", wantErr, err)
@@ -249,6 +249,33 @@ func TestListBackwardConcurrent(t *testing.T) {
 		go tf(i)
 	}
 	wg.Wait()
+}
+
+func TestListSearch(t *testing.T) {
+	list := collection.NewList(1, 2, 3, 5)
+	equal := func(value, target int) bool {
+		return value == target
+	}
+
+	gotIDX, gotErr := list.Search(4, equal)
+	wantIDX := -1
+	wantErr := &collection.ErrNotFound{}
+	if gotIDX != wantIDX {
+		t.Errorf(testFailedMsg, "TestListSearch", wantIDX, gotIDX)
+	}
+	if _, ok := gotErr.(*collection.ErrNotFound); !ok {
+		t.Errorf(testFailedMsg, "TestListSearch", wantErr, gotErr)
+	}
+
+	gotIDX, gotErr = list.Search(2, equal)
+	wantIDX = 1
+	wantErr = nil
+	if gotIDX != wantIDX {
+		t.Errorf(testFailedMsg, "TestListSearch", wantIDX, gotIDX)
+	}
+	if gotErr != nil {
+		t.Errorf(testFailedMsg, "TestListSearch", wantErr, gotErr)
+	}
 }
 
 func BenchmarkAppend(b *testing.B) {

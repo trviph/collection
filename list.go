@@ -12,7 +12,7 @@ import (
 // because it only allow one goroutine at a time to access it data.
 type List[T any] struct {
 	length     int
-	head, tail *Node[T]
+	head, tail *node[T]
 	mux        sync.Mutex
 }
 
@@ -22,10 +22,10 @@ type List[T any] struct {
 //
 //	emptyList := New[int]()
 //	initializedList := New(1, 2, 3, 4, 5)
-func NewList[T any](data ...T) *List[T] {
+func NewList[T any](values ...T) *List[T] {
 	l := &List[T]{}
-	for _, d := range data {
-		l.Append(d)
+	for _, value := range values {
+		l.Append(value)
 	}
 	return l
 }
@@ -39,12 +39,12 @@ func (l *List[T]) Length() int {
 }
 
 // [Append] adds new nodes to at the end of the list
-func (l *List[T]) Append(data ...T) {
+func (l *List[T]) Append(values ...T) {
 	l.mux.Lock()
 	defer l.mux.Unlock()
 
-	for _, d := range data {
-		newNode := &Node[T]{data: d}
+	for _, value := range values {
+		newNode := &node[T]{value: value}
 		// If there is no head, meaning the current list is empty,
 		// then insert as head.
 		if l.head == nil {
@@ -56,16 +56,16 @@ func (l *List[T]) Append(data ...T) {
 			l.tail = newNode
 		}
 	}
-	l.length += len(data)
+	l.length += len(values)
 }
 
 // [Prepend] adds a new node at the start of the list.
-func (l *List[T]) Prepend(data ...T) {
+func (l *List[T]) Prepend(values ...T) {
 	l.mux.Lock()
 	defer l.mux.Unlock()
 
-	for _, d := range data {
-		newNode := &Node[T]{data: d}
+	for _, value := range values {
+		newNode := &node[T]{value: value}
 		// If there is no head, meaning the current list is empty,
 		// then insert as head.
 		if l.head == nil {
@@ -77,14 +77,14 @@ func (l *List[T]) Prepend(data ...T) {
 			l.head = newNode
 		}
 	}
-	l.length += len(data)
+	l.length += len(values)
 }
 
 // [Insert] adds a new node after the node at a specified index.
 // If the index is less than zero or greater than or equal the current length of the list,
 // then this function will return an [ErrIndexOutOfRange] error.
 // If you want to insert at the start or at the end of the list use [Prepend] or [Append] instead.
-func (l *List[T]) Insert(data T, at int) error {
+func (l *List[T]) Insert(value T, at int) error {
 	l.mux.Lock()
 	defer l.mux.Unlock()
 
@@ -97,7 +97,7 @@ func (l *List[T]) Insert(data T, at int) error {
 	}
 
 	// Get the node at index specified by idx.
-	newNode := &Node[T]{data: data}
+	newNode := &node[T]{value: value}
 	currNode := l.head
 	for at > 0 {
 		currNode = currNode.right
@@ -129,7 +129,7 @@ func (l *List[T]) All() iter.Seq2[int, T] {
 		curr := l.head
 		idx := 0
 		for curr != nil {
-			if !yield(idx, curr.data) {
+			if !yield(idx, curr.value) {
 				return
 			}
 			curr = curr.right
@@ -152,11 +152,43 @@ func (l *List[T]) Backward() iter.Seq2[int, T] {
 		curr := l.tail
 		idx := l.length - 1
 		for curr != nil {
-			if !yield(idx, curr.data) {
+			if !yield(idx, curr.value) {
 				return
 			}
 			curr = curr.left
 			idx--
 		}
 	}
+}
+
+// [Search] searches for a value in the list.
+// It takes the target to search for and the equal function.
+// The equal function takes two arguments value and target,
+// it should return [true] if the two arguments is considered to be equal.
+//
+// It returns an index greater or equal to zero and a nil error if the value existed inside the list,
+// else return the index of -1 and error of [ErrNotFound].
+//
+//	 type user struct {
+//	   name string
+//	 }
+//
+//	 func main() {
+//		  user1 := user{name: "User 1"}
+//		  user2 := user{name: "User 2"}
+//		  users := NewList(user1, user2)
+//
+//		  equal := func (value, target user) bool {
+//		    return value.name == target.name
+//		  }
+//		  idx, err := users.Search(user1, equal)
+//		  // code goes here
+//	 }
+func (l *List[T]) Search(target T, equal func(value, target T) bool) (int, error) {
+	for idx, value := range l.All() {
+		if equal(value, target) {
+			return idx, nil
+		}
+	}
+	return -1, &ErrNotFound{msg: fmt.Sprintf("target of %v not existed in list", target)}
 }
