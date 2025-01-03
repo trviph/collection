@@ -88,12 +88,8 @@ func (l *List[T]) Insert(value T, at int) error {
 	l.mux.Lock()
 	defer l.mux.Unlock()
 
-	if at < 0 || at >= l.length {
-		return &ErrIndexOutOfRange{
-			msg: fmt.Sprintf(
-				"index of %d is out of range for list of length of %d", at, l.length,
-			),
-		}
+	if err := l.checkIndex(at); err != nil {
+		return err
 	}
 
 	// Get the node at index specified by idx.
@@ -191,4 +187,31 @@ func (l *List[T]) Search(target T, equal func(value, target T) bool) (int, error
 		}
 	}
 	return -1, &ErrNotFound{msg: fmt.Sprintf("target of %v not existed in list", target)}
+}
+
+// [Index] gets value at the specified index.
+// If the index is out of range, it will return [ErrIndexOutOfRange] as error.
+func (l *List[T]) Index(at int) (T, error) {
+	var res T
+	if err := l.checkIndex(at); err != nil {
+		return res, err
+	}
+	for idx, value := range l.All() {
+		if idx == at {
+			res = value
+			break
+		}
+	}
+	return res, nil
+}
+
+func (l *List[T]) checkIndex(at int) error {
+	if at < 0 || at >= l.length {
+		return &ErrIndexOutOfRange{
+			msg: fmt.Sprintf(
+				"index of %d is out of range for list of length of %d", at, l.length,
+			),
+		}
+	}
+	return nil
 }

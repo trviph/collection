@@ -278,9 +278,23 @@ func TestListSearch(t *testing.T) {
 	}
 }
 
-func BenchmarkAppend(b *testing.B) {
-	list := collection.NewList[int]()
-	for i := 0; i <= b.N; i++ {
-		list.Append(i)
+func TestListIndex(t *testing.T) {
+	list := collection.NewList(1, 2, 3, 4, 5)
+	want := []int{1, 2, 3, 4, 5}
+
+	for idx := 0; idx < list.Length(); idx++ {
+		gotValue, gotErr := list.Index(idx)
+		if want[idx] != gotValue {
+			t.Errorf(testFailedMsg, "TestListIndex", want[idx], gotValue)
+		}
+		if gotErr != nil {
+			t.Errorf(testFailedMsg, "TestListIndex", "nil error", gotErr)
+		}
+	}
+
+	_, gotErr := list.Index(99)
+	wantErr := &collection.ErrIndexOutOfRange{}
+	if _, ok := gotErr.(*collection.ErrIndexOutOfRange); !ok {
+		t.Errorf(testFailedMsg, "TestListIndex", wantErr, gotErr)
 	}
 }
