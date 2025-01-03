@@ -45,6 +45,8 @@ func (l *List[T]) Append(data ...T) {
 
 	for _, d := range data {
 		newNode := &Node[T]{data: d}
+		// If there is no head, meaning the current list is empty,
+		// then insert as head.
 		if l.head == nil {
 			l.head = newNode
 			l.tail = newNode
@@ -53,48 +55,53 @@ func (l *List[T]) Append(data ...T) {
 			l.tail.right = newNode
 			l.tail = newNode
 		}
-		l.length++
 	}
+	l.length += len(data)
 }
 
 // [Prepend] adds a new node at the start of the list.
-func (l *List[T]) Prepend(data T) {
+func (l *List[T]) Prepend(data ...T) {
 	l.mux.Lock()
 	defer l.mux.Unlock()
 
-	newNode := &Node[T]{data: data}
-
-	// If there is no head, meaning the current list is empty,
-	// then insert as head.
-	if l.head == nil {
-		l.head = newNode
-		l.tail = newNode
-	} else {
-		newNode.right = l.head
-		l.head.left = newNode
-		l.head = newNode
+	for _, d := range data {
+		newNode := &Node[T]{data: d}
+		// If there is no head, meaning the current list is empty,
+		// then insert as head.
+		if l.head == nil {
+			l.head = newNode
+			l.tail = newNode
+		} else {
+			newNode.right = l.head
+			l.head.left = newNode
+			l.head = newNode
+		}
 	}
-	l.length++
+	l.length += len(data)
 }
 
 // [Insert] adds a new node after the node at a specified index.
 // If the index is less than zero or greater than or equal the current length of the list,
 // then this function will return an [ErrIndexOutOfRange] error.
 // If you want to insert at the start or at the end of the list use [Prepend] or [Append] instead.
-func (l *List[T]) Insert(data T, idx int) error {
+func (l *List[T]) Insert(data T, at int) error {
 	l.mux.Lock()
 	defer l.mux.Unlock()
 
-	if idx < 0 || idx >= l.length {
-		return &ErrIndexOutOfRange{msg: fmt.Sprintf("index of %d is out of range for list of length of %d", idx, l.length)}
+	if at < 0 || at >= l.length {
+		return &ErrIndexOutOfRange{
+			msg: fmt.Sprintf(
+				"index of %d is out of range for list of length of %d", at, l.length,
+			),
+		}
 	}
 
 	// Get the node at index specified by idx.
 	newNode := &Node[T]{data: data}
 	currNode := l.head
-	for idx > 0 {
+	for at > 0 {
 		currNode = currNode.right
-		idx--
+		at--
 	}
 
 	// Merge newNode in the the list after the currNode.

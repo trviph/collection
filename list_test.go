@@ -50,6 +50,67 @@ func TestListAppend(t *testing.T) {
 	}
 }
 
+func TestListPrepend(t *testing.T) {
+	list := collection.NewList[int]()
+	list.Prepend()
+	list.Prepend(6)
+	list.Prepend(5)
+	list.Prepend(4)
+	list.Prepend(3, 2, 1)
+	want := []int{1, 2, 3, 4, 5, 6}
+
+	for idx, got := range list.All() {
+		if want[idx] != got {
+			t.Errorf(testFailedMsg, "TestListPrepend", want[idx], got)
+		}
+	}
+}
+
+func TestListInsert(t *testing.T) {
+	list := collection.NewList[int](1, 3, 6)
+
+	// This make the list [1, 2, 3, 6]
+	data, at := 2, 0
+	if err := list.Insert(data, at); err != nil {
+		t.Errorf(testFailedMsg, "TestListInsert", "nil error", err)
+	}
+
+	// This make the list [1, 2, 3, 4, 6]
+	data, at = 4, 2
+	if err := list.Insert(data, at); err != nil {
+		t.Errorf(testFailedMsg, "TestListInsert", "nil error", err)
+	}
+
+	// This make the list [1, 2, 3, 4, 5, 6]
+	data, at = 5, 3
+	if err := list.Insert(data, at); err != nil {
+		t.Errorf(testFailedMsg, "TestListInsert", "nil error", err)
+	}
+
+	// This should failed, because index is out of range
+	data, at = 99, 99
+	err := list.Insert(data, at)
+	if _, ok := err.(*collection.ErrIndexOutOfRange); !ok {
+		var wantErr error = &collection.ErrIndexOutOfRange{}
+		t.Errorf(testFailedMsg, "TestListInsert", wantErr, err)
+	}
+
+	// This should failed, because index is negative
+	data, at = -1, -1
+	err = list.Insert(data, at)
+	if _, ok := err.(*collection.ErrIndexOutOfRange); !ok {
+		var wantErr error = &collection.ErrIndexOutOfRange{}
+		t.Errorf(testFailedMsg, "TestListInsert", wantErr, err)
+	}
+
+	want := []int{1, 2, 3, 4, 5, 6}
+	for idx, got := range list.All() {
+		if want[idx] != got {
+			t.Errorf(testFailedMsg, "TestListPrepend", want[idx], got)
+		}
+	}
+}
+
 func TestListAll(t *testing.T) {
 	list := collection.NewList(1, 2, 3, 4, 5)
 	want := []int{1, 2, 3, 4, 5}
@@ -67,6 +128,13 @@ func TestListAll(t *testing.T) {
 			)
 		}
 		prevIDX = idx
+	}
+
+	// Test break early
+	for idx := range list.All() {
+		if idx > 2 {
+			break
+		}
 	}
 }
 
@@ -130,6 +198,13 @@ func TestListBackward(t *testing.T) {
 			)
 		}
 		prevIDX = idx
+	}
+
+	// Test break early
+	for idx := range list.Backward() {
+		if idx > 2 {
+			break
+		}
 	}
 }
 
