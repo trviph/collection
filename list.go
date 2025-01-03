@@ -374,7 +374,11 @@ func (l *List[T]) getNode(at int) *node[T] {
 			return node
 		}
 	}
-	panic("what")
+	// This panic have happened in the past due to:
+	// - Jan 4th 25 (trviph) - Wrong implementation of List.Insert and List.Remove causing the nodes to not linked properly.
+	panic(
+		fmt.Errorf("something went very wrong: cannot find node with index %d in a list of length %d", at, l.length),
+	)
 }
 
 func (l *List[T]) checkIndex(at int) error {

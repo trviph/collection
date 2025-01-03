@@ -101,6 +101,12 @@ func TestListInsert(t *testing.T) {
 		t.Errorf(testFailedMsg, "TestListInsert", "nil error", err)
 	}
 
+	// This make the list [1, 2, 3, 4, 5, 6, 7]
+	value, at = 7, list.Length()-1
+	if err := list.Insert(value, at); err != nil {
+		t.Errorf(testFailedMsg, "TestListInsert", "nil error", err)
+	}
+
 	// This should failed, because index is out of range
 	value, at = 99, list.Length()
 	err := list.Insert(value, at)
@@ -117,7 +123,7 @@ func TestListInsert(t *testing.T) {
 		t.Errorf(testFailedMsg, "TestListInsert", wantErr, err)
 	}
 
-	want := []int{1, 2, 3, 4, 5, 6}
+	want := []int{1, 2, 3, 4, 5, 6, 7}
 	// Test to see if nodes are linked properly
 	for idx, got := range list.All() {
 		if want[idx] != got {
