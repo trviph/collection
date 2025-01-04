@@ -149,3 +149,57 @@ func maxHeapTest(heap *collection.Heap[int]) error {
 
 	return nil
 }
+
+func TestHeapPushPop(t *testing.T) {
+	maxHeap := collection.MustNewHeap[int](collection.GreaterThan)
+
+	// Should return error since the heap is empty
+	if _, err := maxHeap.PushPop(1); err == nil {
+		t.Errorf(testFailedMsg, "TestHeapPushPop", "error", err)
+	}
+
+	maxHeap.Push(1)
+	// Should return 2 since it is greater than what in the heap
+	want := 2
+	if got, err := maxHeap.PushPop(want); err != nil {
+		t.Errorf(testFailedMsg, "TestHeapPushPop", "nil error", err)
+	} else if got != want {
+		t.Errorf(testFailedMsg, "TestHeapPushPop", want, got)
+	}
+
+	// Should return 1 since it is greater than the pushed value
+	want = 1
+	if got, err := maxHeap.PushPop(-1); err != nil {
+		t.Errorf(testFailedMsg, "TestHeapPushPop", "nil error", err)
+	} else if got != want {
+		t.Errorf(testFailedMsg, "TestHeapPushPop", want, got)
+	}
+
+	// The next value should now be -1
+	want = -1
+	if got, err := maxHeap.Top(); err != nil {
+		t.Errorf(testFailedMsg, "TestHeapPushPop", "nil error", err)
+	} else if got != want {
+		t.Errorf(testFailedMsg, "TestHeapPushPop", want, got)
+	}
+}
+
+func TestHeapTop(t *testing.T) {
+	maxHeap := collection.MustNewHeap[int](collection.GreaterThan)
+
+	// Should return error since heap is empty
+	if _, err := maxHeap.Top(); err == nil {
+		t.Errorf(testFailedMsg, "TestHeapTop", "error", err)
+	}
+
+	maxHeap.Push(100)
+	want := 100
+	for i := 0; i < 10; i++ {
+		// The value at top should not change
+		if got, err := maxHeap.Top(); err != nil {
+			t.Errorf(testFailedMsg, "TestHeapTop", "nil error", err)
+		} else if got != want {
+			t.Errorf(testFailedMsg, "TestHeapTop", want, got)
+		}
+	}
+}
