@@ -32,3 +32,10 @@ type queue[T any] interface {
 	Front() (T, error)
 	Rear() (T, error)
 }
+
+type heap[T any] interface {
+	Push(values ...T)
+	Pop() (T, error)
+	PushPop(value T) (T, error)
+	Top() (T, error)
+}
