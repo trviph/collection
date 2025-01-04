@@ -205,7 +205,7 @@ func (h *Heap[T]) trySwap(parentIDX, childIDX int) bool {
 }
 
 func (h *Heap[T]) getParentIDX(idx int) int {
-	return idx / 2
+	return (idx - 1) / 2
 }
 
 func (h *Heap[T]) getLeftIDX(idx int) int {
