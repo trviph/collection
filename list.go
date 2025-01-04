@@ -7,7 +7,7 @@ import (
 )
 
 // [List] is a doubly linked list implementation.
-// All operation on [List] should be thread-safe,
+// All operation on [List] is thread-safe,
 // because it only allow one goroutine at a time to access it data.
 type List[T any] struct {
 	mu         sync.RWMutex
