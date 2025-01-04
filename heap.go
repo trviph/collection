@@ -1,6 +1,7 @@
 package collection
 
 // A [Heap] implemented using [slice] (dynamic array) as the base.
+// Heap is thread-safe, because it only allow one goroutine at a time to access it data.
 type Heap[T any] struct {
 	values []T
 	cmp    func(T, T) bool
