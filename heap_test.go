@@ -80,6 +80,7 @@ func minHeapTest(heap *collection.Heap[int]) error {
 		if err != nil {
 			return err
 		}
+		fmt.Println(current)
 		if current < previous {
 			return fmt.Errorf(
 				"min heap return invalid value; current value %d is less than previous value %d",
@@ -90,6 +91,7 @@ func minHeapTest(heap *collection.Heap[int]) error {
 		previous = current
 		received++
 	}
+	fmt.Println("*****")
 
 	// Test if the heap return all the push value
 	if pushed != received {
