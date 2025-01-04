@@ -38,4 +38,5 @@ type heap[T any] interface {
 	Pop() (T, error)
 	PushPop(value T) (T, error)
 	Top() (T, error)
+	IsEmpty() bool
 }

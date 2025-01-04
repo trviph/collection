@@ -32,3 +32,12 @@ func GreaterThan[T Orderable](current, other T) bool {
 func GreaterThanOrEqual[T Orderable](current, other T) bool {
 	return current >= other
 }
+
+// Ensure f must return a nil error else this will panic.
+func Must[T any](f func() (T, error)) T {
+	val, err := f()
+	if err != nil {
+		panic(err)
+	}
+	return val
+}
