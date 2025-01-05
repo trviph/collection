@@ -1,10 +1,14 @@
 package collection
 
-import "fmt"
+import (
+	"fmt"
+	"sync"
+)
 
 // A first-in-first-out [Queue] implemented by using [List] as the base.
 // Since [List] is thread-safe, [Queue] should also be thread-safe.
 type Queue[T any] struct {
+	mu   sync.Mutex
 	list *List[T]
 }
 
@@ -49,6 +53,9 @@ func (q *Queue[T]) Front() (T, error) {
 // Rear get the value from the rear/end but does not remove it from the queue.
 // If the queue is empty return [ErrIsEmpty] as an error.
 func (q *Queue[T]) Rear() (T, error) {
+	q.mu.Lock()
+	defer q.mu.Unlock()
+
 	if value, err := q.list.Index(q.list.Length() - 1); err != nil {
 		return value, fmt.Errorf("failed to peek at the rear of the queue, cause by %w", err)
 	} else {
