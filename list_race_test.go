@@ -92,10 +92,6 @@ func TestListBackwardRace(t *testing.T) {
 	wg.Wait()
 }
 
-func randint(atleast, atmost int) int {
-	return rand.Intn(atmost-atleast) + atleast
-}
-
 func TestListRace(t *testing.T) {
 	var wg sync.WaitGroup
 	list := collection.NewList[int]()
