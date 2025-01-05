@@ -1,10 +1,14 @@
 package collection
 
-import "fmt"
+import (
+	"fmt"
+	"sync"
+)
 
 // A first-in-last-out [Stack] implemented by using [List] as the base.
 // Since [List] is thread-safe, [Stack] should also be thread-safe.
 type Stack[T any] struct {
+	mu   sync.Mutex
 	list *List[T]
 }
 
@@ -39,6 +43,9 @@ func (s *Stack[T]) Pop() (T, error) {
 // Top get the value of the last push but does not remove the value from the stack.
 // If the stack is empty return [ErrIsEmpty] as an error.
 func (s *Stack[T]) Top() (T, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
 	if value, err := s.list.Index(s.list.Length() - 1); err != nil {
 		return value, fmt.Errorf("failed to peek at stack, cause by %w", err)
 	} else {
