@@ -9,6 +9,22 @@ type node[T any] struct {
 	right *node[T]
 }
 
-func (n *node[T]) Val() T {
-	return n.value
+func (n *node[T]) unlink() {
+	if n.left != nil && n.left.right == n {
+		n.left.right = n.right
+	}
+	if n.right != nil && n.right.left == n {
+		n.right.left = n.left
+	}
+	n.left = nil
+	n.right = nil
+}
+
+func (n *node[T]) insert(newRight *node[T]) {
+	newRight.left = n
+	if n.right != nil && n.right.left == n {
+		newRight.right = n.right
+		n.right.left = newRight
+	}
+	n.right = newRight
 }

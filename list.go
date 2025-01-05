@@ -89,34 +89,25 @@ func (l *List[T]) prepend(value T) {
 // If the index is less than zero or greater than or equal the current length of the list,
 // then this function will return an [ErrIndexOutOfRange] error.
 // If you want to insert at the start of the list use [List.Prepend] instead.
-func (l *List[T]) Insert(value T, at int) error {
+func (l *List[T]) Insert(value T, after int) error {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 
-	if err := l.checkIndex(at); err != nil {
+	if err := l.checkIndex(after); err != nil {
 		return err
 	}
 
-	// Edge case insert after tail, then append
-	if at == l.length-1 {
+	// If insert after tail, then append
+	if after == l.length-1 {
 		l.append(value)
 		return nil
 	}
 
-	// Get the node at index specified by idx.
-	idxNode := l.getNode(at)
-
-	// Create a new node
 	newNode := &node[T]{value: value}
-
-	// Merge newNode in the the list after the currNode.
-	newNode.right = idxNode.right
-	newNode.left = idxNode
-	idxNode.right.left = newNode
-	idxNode.right = newNode
-
-	// Increase length by one.
+	idxNode := l.getNode(after)
+	idxNode.insert(newNode)
 	l.length++
+
 	return nil
 }
 
@@ -246,15 +237,11 @@ func (l *List[T]) Search(target T, equal func(value, target T) bool) (int, error
 func (l *List[T]) Index(at int) (T, error) {
 	l.mu.RLock()
 	defer l.mu.RUnlock()
-
-	var res T
 	if err := l.checkIndex(at); err != nil {
-		return res, err
+		var zeroValue T
+		return zeroValue, err
 	}
-	node := l.getNode(at)
-
-	res = node.value
-	return res, nil
+	return l.getNode(at).value, nil
 }
 
 // Pop removes and returns the last element of the list.
@@ -264,8 +251,8 @@ func (l *List[T]) Pop() (T, error) {
 	defer l.mu.Unlock()
 
 	if l.isEmpty() {
-		var value T
-		return value, &ErrIsEmpty{msg: "list is empty"}
+		var zeroValue T
+		return zeroValue, &ErrIsEmpty{msg: "list is empty"}
 	}
 	return l.pop()
 }
@@ -294,8 +281,8 @@ func (l *List[T]) Dequeue() (T, error) {
 	defer l.mu.Unlock()
 
 	if l.isEmpty() {
-		var value T
-		return value, &ErrIsEmpty{msg: "list is empty"}
+		var zeroValue T
+		return zeroValue, &ErrIsEmpty{msg: "list is empty"}
 	}
 	return l.dequeue()
 }
@@ -324,13 +311,13 @@ func (l *List[T]) Remove(at int) (T, error) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 
-	var value T
 	// Check if index is valid
+	var zeroValue T
 	if l.isEmpty() {
-		return value, &ErrIsEmpty{msg: "list is empty"}
+		return zeroValue, &ErrIsEmpty{msg: "list is empty"}
 	}
 	if err := l.checkIndex(at); err != nil {
-		return value, err
+		return zeroValue, err
 	}
 
 	// If Remove(0) then dequeue
@@ -343,18 +330,12 @@ func (l *List[T]) Remove(at int) (T, error) {
 		return l.pop()
 	}
 
-	// Get the node at the specified index
+	// Get the node at the specified index and remove it
 	idxNode := l.getNode(at)
-
-	// Remove idxNode from the list
-	left := idxNode.left
-	right := idxNode.right
-	left.right = right
-	right.left = left
-
-	value = idxNode.value
+	idxNode.unlink()
 	l.length--
-	return value, nil
+
+	return idxNode.value, nil
 }
 
 // Get the node at the specified index, should be called after [checkIndex]

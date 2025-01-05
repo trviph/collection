@@ -64,7 +64,7 @@ func TestMinHeap(t *testing.T) {
 
 func minHeapTest(heap *collection.Heap[int]) error {
 	pushed := 0
-	for i := 0; i < rand.Intn(999)+1; i++ {
+	for i := 0; i < 1000; i++ {
 		heap.Push(rand.Int())
 		pushed++
 	}
@@ -115,7 +115,7 @@ func TestMaxHeap(t *testing.T) {
 
 func maxHeapTest(heap *collection.Heap[int]) error {
 	pushed := 0
-	for i := 0; i < rand.Intn(999)+1; i++ {
+	for i := 0; i < 1000; i++ {
 		heap.Push(rand.Int())
 		pushed++
 	}
@@ -148,6 +148,14 @@ func maxHeapTest(heap *collection.Heap[int]) error {
 	}
 
 	return nil
+}
+
+func TestHeapPopEmpty(t *testing.T) {
+	maxHeap := collection.MustNewHeap[int](collection.GreaterThan)
+	// Should return error since the heap is empty
+	if _, err := maxHeap.Pop(); err == nil {
+		t.Errorf(testFailedMsg, "TestHeapPushPop", "error", err)
+	}
 }
 
 func TestHeapPushPop(t *testing.T) {

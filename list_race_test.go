@@ -94,89 +94,96 @@ func TestListBackwardRace(t *testing.T) {
 
 func TestListRace(t *testing.T) {
 	var wg sync.WaitGroup
-	list := collection.NewList(1, 2, 3)
-
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		for i := 0; i < rand.Intn(1000); i++ {
-			list.Append(rand.Int())
-		}
-	}()
-
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		for i := 0; i < rand.Intn(1000); i++ {
-			list.Prepend(rand.Int())
-		}
-	}()
-
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		for i := 0; i < rand.Intn(1000); i++ {
-			_ = list.Insert(rand.Int(), rand.Intn(list.Length()+1))
-		}
-	}()
-
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		for i := 0; i < rand.Intn(1000); i++ {
-			for range list.All() {
+	list := collection.NewList[int]()
+	functions := []func(){
+		// Append to the list
+		func() {
+			defer wg.Done()
+			for i := 0; i < randint(10, 1000); i++ {
+				list.Append(rand.Int())
 			}
-		}
-	}()
+		},
 
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		for i := 0; i < rand.Intn(1000); i++ {
-			for range list.Backward() {
+		// Prepend to the list
+		func() {
+			defer wg.Done()
+			for i := 0; i < randint(10, 1000); i++ {
+				list.Prepend(rand.Int())
 			}
-		}
-	}()
+		},
 
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		for i := 0; i < rand.Intn(1000); i++ {
-			_, _ = list.Search(rand.Int(), func(value, target int) bool { return value == target })
-		}
-	}()
+		// Insert to the list
+		func() {
+			defer wg.Done()
+			for i := 0; i < randint(10, 1000); i++ {
+				_ = list.Insert(rand.Int(), randint(0, list.Length()+1))
+			}
+		},
 
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		for i := 0; i < rand.Intn(1000); i++ {
-			_, _ = list.Index(rand.Intn(list.Length() + 1))
-		}
-	}()
+		// Foward traversal of the list
+		func() {
+			defer wg.Done()
+			for i := 0; i < randint(10, 1000); i++ {
+				for range list.All() {
+					// ignore
+				}
+			}
+		},
 
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		for i := 0; i < rand.Intn(1000); i++ {
-			_, _ = list.Pop()
-		}
-	}()
+		// Backward traversal of the list
+		func() {
+			defer wg.Done()
+			for i := 0; i < randint(10, 1000); i++ {
+				for range list.Backward() {
+					// ignore
+				}
+			}
+		},
 
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		for i := 0; i < rand.Intn(1000); i++ {
-			_, _ = list.Dequeue()
-		}
-	}()
+		// Search for value in the list
+		func() {
+			defer wg.Done()
+			for i := 0; i < randint(10, 1000); i++ {
+				_, _ = list.Search(rand.Int(), func(value, target int) bool { return value == target })
+			}
+		},
 
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		for i := 0; i < rand.Intn(1000); i++ {
-			_, _ = list.Remove(rand.Intn(list.Length() + 1))
-		}
-	}()
+		// Get value at an index
+		func() {
+			defer wg.Done()
+			for i := 0; i < randint(10, 1000); i++ {
+				_, _ = list.Index(randint(0, list.Length()+1))
+			}
+		},
 
+		// Pop from the list
+		func() {
+			defer wg.Done()
+			for i := 0; i < randint(10, 1000); i++ {
+				_, _ = list.Pop()
+			}
+		},
+
+		// Dequeue from the list
+		func() {
+			defer wg.Done()
+			for i := 0; i < randint(10, 1000); i++ {
+				_, _ = list.Dequeue()
+			}
+		},
+
+		// Remove from the list
+		func() {
+			defer wg.Done()
+			for i := 0; i < randint(10, 1000); i++ {
+				_, _ = list.Remove(randint(0, list.Length()+1))
+			}
+		},
+	}
+
+	wg.Add(len(functions))
+	for _, f := range functions {
+		go f()
+	}
 	wg.Wait()
 }

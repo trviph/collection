@@ -8,7 +8,7 @@ type list[T any] interface {
 	Length() int
 	Append(values ...T)
 	Prepend(values ...T)
-	Insert(value T, at int) error
+	Insert(value T, after int) error
 	All() iter.Seq2[int, T]
 	Backward() iter.Seq2[int, T]
 	Search(target T, equal func(value, target T) bool) (int, error)
