@@ -1,6 +1,7 @@
 package collection_test
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/trviph/collection"
@@ -51,8 +52,8 @@ func TestStackPop(t *testing.T) {
 	stack := collection.NewStack[int]()
 
 	_, err := stack.Pop()
-	if _, ok := err.(*collection.ErrIsEmpty); !ok {
-		t.Errorf(testFailedMsg, "TestStackPop", error(&collection.ErrIsEmpty{}), err)
+	if !errors.Is(err, collection.ErrIsEmpty) {
+		t.Errorf(testFailedMsg, "TestStackPop", collection.ErrIsEmpty, err)
 	}
 
 	stack.Push(1)
@@ -81,8 +82,8 @@ func TestStackTop(t *testing.T) {
 	stack := collection.NewStack[int]()
 
 	_, err := stack.Top()
-	if _, ok := err.(*collection.ErrIsEmpty); !ok {
-		t.Errorf(testFailedMsg, "TestStackTop", error(&collection.ErrIsEmpty{}), err)
+	if !errors.Is(err, collection.ErrIsEmpty) {
+		t.Errorf(testFailedMsg, "TestStackTop", collection.ErrIsEmpty, err)
 	}
 
 	stack.Push(1)

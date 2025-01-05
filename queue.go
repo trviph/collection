@@ -1,5 +1,7 @@
 package collection
 
+import "fmt"
+
 // A first-in-first-out [Queue] implemented by using [List] as the base.
 // Since [List] is thread-safe, [Queue] should also be thread-safe.
 type Queue[T any] struct {
@@ -16,7 +18,7 @@ func NewQueue[T any](values ...T) *Queue[T] {
 
 // Length returns the number of values current in the queue.
 func (q *Queue[T]) Length() int {
-	return q.list.length
+	return q.list.Length()
 }
 
 // Push a list of values in to the queue, starting from left to right.
@@ -27,29 +29,29 @@ func (q *Queue[T]) Push(values ...T) {
 // Dequeue get the value from the front of the queue, and remove it from the queue.
 // If the queue is empty return [ErrIsEmpty] as an error.
 func (q *Queue[T]) Dequeue() (T, error) {
-	var value T
-	if q.list.Length() == 0 {
-		return value, &ErrIsEmpty{msg: "queue is empty"}
+	if value, err := q.list.Dequeue(); err != nil {
+		return value, fmt.Errorf("failed to dequeue queue, cause by %w", err)
+	} else {
+		return value, nil
 	}
-	return q.list.Dequeue()
 }
 
 // Front get the value from the front but does not remove it from the queue.
 // If the queue is empty return [ErrIsEmpty] as an error.
 func (q *Queue[T]) Front() (T, error) {
-	var value T
-	if q.list.Length() == 0 {
-		return value, &ErrIsEmpty{msg: "queue is empty"}
+	if value, err := q.list.Index(0); err != nil {
+		return value, fmt.Errorf("failed to peek at the front of the queue, cause by %w", err)
+	} else {
+		return value, nil
 	}
-	return q.list.Index(0)
 }
 
 // Rear get the value from the rear/end but does not remove it from the queue.
 // If the queue is empty return [ErrIsEmpty] as an error.
 func (q *Queue[T]) Rear() (T, error) {
-	var value T
-	if q.list.Length() == 0 {
-		return value, &ErrIsEmpty{msg: "queue is empty"}
+	if value, err := q.list.Index(q.list.Length() - 1); err != nil {
+		return value, fmt.Errorf("failed to peek at the rear of the queue, cause by %w", err)
+	} else {
+		return value, nil
 	}
-	return q.list.Index(q.Length() - 1)
 }

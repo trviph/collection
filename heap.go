@@ -71,7 +71,7 @@ func (h *Heap[T]) Pop() (T, error) {
 
 	var res T
 	if h.isEmpty() {
-		return res, &ErrIsEmpty{"heap is empty"}
+		return res, fmt.Errorf("failed to pop on heap, cause %w", ErrIsEmpty)
 	}
 
 	// Get value from the root
@@ -97,7 +97,7 @@ func (h *Heap[T]) PushPop(value T) (T, error) {
 
 	var res T
 	if h.isEmpty() {
-		return res, &ErrIsEmpty{"heap is empty"}
+		return res, fmt.Errorf("failed to push and pop on heap, cause %w", ErrIsEmpty)
 	}
 
 	// If the inserted value satisfied cmp condition with the root,
@@ -125,7 +125,7 @@ func (h *Heap[T]) Top() (T, error) {
 
 	var res T
 	if h.isEmpty() {
-		return res, &ErrIsEmpty{"heap is empty"}
+		return res, fmt.Errorf("failed to peek at heap, cause %w", ErrIsEmpty)
 	}
 	return h.values[0], nil
 }

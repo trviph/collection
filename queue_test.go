@@ -1,6 +1,7 @@
 package collection_test
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/trviph/collection"
@@ -51,8 +52,8 @@ func TestQueueDequeue(t *testing.T) {
 	queue := collection.NewQueue[int]()
 
 	_, err := queue.Dequeue()
-	if _, ok := err.(*collection.ErrIsEmpty); !ok {
-		t.Errorf(testFailedMsg, "TestQueuePop", error(&collection.ErrIsEmpty{}), err)
+	if !errors.Is(err, collection.ErrIsEmpty) {
+		t.Errorf(testFailedMsg, "TestQueuePop", collection.ErrIsEmpty, err)
 	}
 
 	queue.Push(1)
@@ -100,8 +101,8 @@ func TestQueueFront(t *testing.T) {
 	queue := collection.NewQueue[int]()
 
 	_, err := queue.Front()
-	if _, ok := err.(*collection.ErrIsEmpty); !ok {
-		t.Errorf(testFailedMsg, "TestQueueFront", error(&collection.ErrIsEmpty{}), err)
+	if !errors.Is(err, collection.ErrIsEmpty) {
+		t.Errorf(testFailedMsg, "TestQueueFront", collection.ErrIsEmpty, err)
 	}
 
 	queue.Push(1)
@@ -130,8 +131,8 @@ func TestQueueRear(t *testing.T) {
 	queue := collection.NewQueue[int]()
 
 	_, err := queue.Rear()
-	if _, ok := err.(*collection.ErrIsEmpty); !ok {
-		t.Errorf(testFailedMsg, "TestQueueRear", error(&collection.ErrIsEmpty{}), err)
+	if !errors.Is(err, collection.ErrIsEmpty) {
+		t.Errorf(testFailedMsg, "TestQueueRear", collection.ErrIsEmpty, err)
 	}
 
 	queue.Push(1)

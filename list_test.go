@@ -1,6 +1,7 @@
 package collection_test
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/trviph/collection"
@@ -110,17 +111,15 @@ func TestListInsert(t *testing.T) {
 	// This should failed, because index is out of range
 	value, at = 99, list.Length()
 	err := list.Insert(value, at)
-	if _, ok := err.(*collection.ErrIndexOutOfRange); !ok {
-		var wantErr error = &collection.ErrIndexOutOfRange{}
-		t.Errorf(testFailedMsg, "TestListInsert", wantErr, err)
+	if !errors.Is(err, collection.ErrIndexOutOfRange) {
+		t.Errorf(testFailedMsg, "TestListInsert", collection.ErrIndexOutOfRange, err)
 	}
 
 	// This should failed, because index is negative
 	value, at = -1, -1
 	err = list.Insert(value, at)
-	if _, ok := err.(*collection.ErrIndexOutOfRange); !ok {
-		var wantErr error = &collection.ErrIndexOutOfRange{}
-		t.Errorf(testFailedMsg, "TestListInsert", wantErr, err)
+	if !errors.Is(err, collection.ErrIndexOutOfRange) {
+		t.Errorf(testFailedMsg, "TestListInsert", collection.ErrIndexOutOfRange, err)
 	}
 
 	want := []int{1, 2, 3, 4, 5, 6, 7}
@@ -201,22 +200,20 @@ func TestListSearch(t *testing.T) {
 
 	gotIDX, gotErr := list.Search(4, equal)
 	wantIDX := -1
-	wantErr := error(&collection.ErrNotFound{})
 	if gotIDX != wantIDX {
 		t.Errorf(testFailedMsg, "TestListSearch", wantIDX, gotIDX)
 	}
-	if _, ok := gotErr.(*collection.ErrNotFound); !ok {
-		t.Errorf(testFailedMsg, "TestListSearch", wantErr, gotErr)
+	if !errors.Is(gotErr, collection.ErrNotFound) {
+		t.Errorf(testFailedMsg, "TestListSearch", collection.ErrNotFound, gotErr)
 	}
 
 	gotIDX, gotErr = list.Search(2, equal)
 	wantIDX = 1
-	wantErr = nil
 	if gotIDX != wantIDX {
 		t.Errorf(testFailedMsg, "TestListSearch", wantIDX, gotIDX)
 	}
 	if gotErr != nil {
-		t.Errorf(testFailedMsg, "TestListSearch", wantErr, gotErr)
+		t.Errorf(testFailedMsg, "TestListSearch", "nil error", gotErr)
 	}
 }
 
@@ -235,9 +232,8 @@ func TestListIndex(t *testing.T) {
 	}
 
 	_, gotErr := list.Index(list.Length())
-	wantErr := error(&collection.ErrIndexOutOfRange{})
-	if _, ok := gotErr.(*collection.ErrIndexOutOfRange); !ok {
-		t.Errorf(testFailedMsg, "TestListIndex", wantErr, gotErr)
+	if !errors.Is(gotErr, collection.ErrIndexOutOfRange) {
+		t.Errorf(testFailedMsg, "TestListIndex", collection.ErrIndexOutOfRange, gotErr)
 	}
 }
 
@@ -272,9 +268,8 @@ func TestListPop(t *testing.T) {
 	// Pop on empty list
 	emptyList := collection.NewList[int]()
 	_, gotErr = emptyList.Pop()
-	wantErr := error(&collection.ErrIsEmpty{})
-	if _, ok := gotErr.(*collection.ErrIsEmpty); !ok {
-		t.Errorf(testFailedMsg, "TestListPop", wantErr, gotErr)
+	if !errors.Is(gotErr, collection.ErrIsEmpty) {
+		t.Errorf(testFailedMsg, "TestListPop", collection.ErrIsEmpty, gotErr)
 	}
 }
 
@@ -309,9 +304,8 @@ func TestListDequeue(t *testing.T) {
 	// Pop on empty list
 	emptyList := collection.NewList[int]()
 	_, gotErr = emptyList.Dequeue()
-	wantErr := error(&collection.ErrIsEmpty{})
-	if _, ok := gotErr.(*collection.ErrIsEmpty); !ok {
-		t.Errorf(testFailedMsg, "TestListDequeue", wantErr, gotErr)
+	if !errors.Is(gotErr, collection.ErrIsEmpty) {
+		t.Errorf(testFailedMsg, "TestListDequeue", collection.ErrIsEmpty, gotErr)
 	}
 }
 
@@ -374,16 +368,14 @@ func TestListRemove(t *testing.T) {
 
 	// Remove with out-of-range index
 	_, gotErr = list.Remove(list.Length())
-	wantErr := error(&collection.ErrIndexOutOfRange{})
-	if _, ok := gotErr.(*collection.ErrIndexOutOfRange); !ok {
-		t.Errorf(testFailedMsg, "TestListRemove", wantErr, gotErr)
+	if !errors.Is(gotErr, collection.ErrIndexOutOfRange) {
+		t.Errorf(testFailedMsg, "TestListRemove", collection.ErrIndexOutOfRange, gotErr)
 	}
 
 	// Remove on empty list
 	emptyList := collection.NewList[int]()
 	_, gotErr = emptyList.Remove(emptyList.Length())
-	wantErr = error(&collection.ErrIsEmpty{})
-	if _, ok := gotErr.(*collection.ErrIsEmpty); !ok {
-		t.Errorf(testFailedMsg, "TestListRemove", wantErr, gotErr)
+	if !errors.Is(gotErr, collection.ErrIsEmpty) {
+		t.Errorf(testFailedMsg, "TestListRemove", collection.ErrIsEmpty, gotErr)
 	}
 }
