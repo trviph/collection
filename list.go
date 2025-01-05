@@ -94,7 +94,7 @@ func (l *List[T]) Insert(value T, after int) error {
 	defer l.mu.Unlock()
 
 	if err := l.checkIndex(after); err != nil {
-		return err
+		return fmt.Errorf("failed to insert into list, cause by %w", err)
 	}
 
 	// If insert after tail, then append
@@ -229,7 +229,7 @@ func (l *List[T]) Search(target T, equal func(value, target T) bool) (int, error
 			return idx, nil
 		}
 	}
-	return -1, &ErrNotFound{msg: fmt.Sprintf("target of %v not existed in list", target)}
+	return -1, fmt.Errorf("target of of %v not existed in list, cause by %w", target, ErrNotFound)
 }
 
 // Index gets value at the specified index.
@@ -237,10 +237,15 @@ func (l *List[T]) Search(target T, equal func(value, target T) bool) (int, error
 func (l *List[T]) Index(at int) (T, error) {
 	l.mu.RLock()
 	defer l.mu.RUnlock()
-	if err := l.checkIndex(at); err != nil {
-		var zeroValue T
-		return zeroValue, err
+
+	var zeroValue T
+	if l.isEmpty() {
+		return zeroValue, fmt.Errorf("failed to get value at index %d from list, cause by %w", at, ErrIsEmpty)
 	}
+	if err := l.checkIndex(at); err != nil {
+		return zeroValue, fmt.Errorf("failed to get value at index %d from list, cause by %w", at, err)
+	}
+
 	return l.getNode(at).value, nil
 }
 
@@ -252,7 +257,7 @@ func (l *List[T]) Pop() (T, error) {
 
 	if l.isEmpty() {
 		var zeroValue T
-		return zeroValue, &ErrIsEmpty{msg: "list is empty"}
+		return zeroValue, fmt.Errorf("failed to pop from list, cause by %w", ErrIsEmpty)
 	}
 	return l.pop()
 }
@@ -282,7 +287,7 @@ func (l *List[T]) Dequeue() (T, error) {
 
 	if l.isEmpty() {
 		var zeroValue T
-		return zeroValue, &ErrIsEmpty{msg: "list is empty"}
+		return zeroValue, fmt.Errorf("failed to dequeue from list, cause by %w", ErrIsEmpty)
 	}
 	return l.dequeue()
 }
@@ -314,10 +319,10 @@ func (l *List[T]) Remove(at int) (T, error) {
 	// Check if index is valid
 	var zeroValue T
 	if l.isEmpty() {
-		return zeroValue, &ErrIsEmpty{msg: "list is empty"}
+		return zeroValue, fmt.Errorf("failed to remove from list, cause by %w", ErrIsEmpty)
 	}
 	if err := l.checkIndex(at); err != nil {
-		return zeroValue, err
+		return zeroValue, fmt.Errorf("failed to remove from list, cause by %w", err)
 	}
 
 	// If Remove(0) then dequeue
@@ -364,11 +369,7 @@ func (l *List[T]) getNode(at int) *node[T] {
 
 func (l *List[T]) checkIndex(at int) error {
 	if at < 0 || at >= l.length {
-		return &ErrIndexOutOfRange{
-			msg: fmt.Sprintf(
-				"index of %d is out of range for list of length of %d", at, l.length,
-			),
-		}
+		return ErrIndexOutOfRange
 	}
 	return nil
 }
