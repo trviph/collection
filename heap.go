@@ -5,8 +5,10 @@ import (
 	"sync"
 )
 
-// A [Heap] implemented using [slice] (dynamic array) as the base.
+// A [Heap] implemented using slice, a dynamic array implementation,  as the base.
 // Heap is thread-safe, because it only allow one goroutine at a time to access it data.
+//
+// [Go Slices: usage and internals]: https://go.dev/blog/slices-intro
 type Heap[T any] struct {
 	mu     sync.RWMutex
 	values []T
@@ -19,7 +21,7 @@ var _ heap[any] = (*Heap[any])(nil)
 // It takes a function that compares two values.
 // During swim/heapify-up and sink/heapify-down operation
 // if the function returns true, then the nodes will be swapped with eachother.
-// Will return an error if cmp is nil, if you want to panic instead use [MustNewHeap].
+// This will return an error if cmp is nil, if you want to panic instead use [MustNewHeap].
 //
 // For example a max Heap[int] would need:
 //
