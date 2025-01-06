@@ -40,3 +40,8 @@ type heap[T any] interface {
 	Top() (T, error)
 	IsEmpty() bool
 }
+
+type cache[K comparable, T any] interface {
+	Put(key K, value T) error
+	Get(key K) (T, error)
+}
