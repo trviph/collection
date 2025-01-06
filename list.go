@@ -377,3 +377,14 @@ func (l *List[T]) checkIndex(at int) error {
 func (l *List[T]) isEmpty() bool {
 	return l.length == 0
 }
+
+// Return the head node of the [List].
+//
+// BUG(trviph): This function is needed for the cache package,
+// but leaks [internal.Node] to the users.
+// Should find way to remove this.
+func (l *List[T]) Head() *internal.Node[T] {
+	l.mu.RLock()
+	defer l.mu.RUnlock()
+	return l.head
+}
