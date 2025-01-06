@@ -3,6 +3,8 @@ package collection
 import (
 	"fmt"
 	"sync"
+
+	"github.com/trviph/collection/internal"
 )
 
 // A first-in-last-out [Stack] implemented by using [List] as the base.
@@ -13,7 +15,7 @@ type Stack[T any] struct {
 }
 
 // Interface guard
-var _ stack[any] = (*Stack[any])(nil)
+var _ internal.Stack[any] = (*Stack[any])(nil)
 
 // [NewStack] creates a new [Stack] of type T.
 func NewStack[T any](values ...T) *Stack[T] {

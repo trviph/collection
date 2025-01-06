@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"iter"
 	"sync"
+
+	"github.com/trviph/collection/internal"
 )
 
 // [List] is a doubly linked list implementation.
@@ -12,11 +14,11 @@ import (
 type List[T any] struct {
 	mu         sync.RWMutex
 	length     int
-	head, tail *node[T]
+	head, tail *internal.Node[T]
 }
 
 // Interface guard
-var _ list[any] = (*List[any])(nil)
+var _ internal.List[any] = (*List[any])(nil)
 
 // [NewList] creates a new doubly linked [List].
 // All operation on [List] should be thread-safe,
@@ -50,13 +52,12 @@ func (l *List[T]) Append(values ...T) {
 }
 
 func (l *List[T]) append(value T) {
-	newNode := &node[T]{value: value}
+	newNode := &internal.Node[T]{Value: value}
 	if l.isEmpty() {
 		l.head = newNode
 		l.tail = newNode
 	} else {
-		newNode.left = l.tail
-		l.tail.right = newNode
+		l.tail.Insert(newNode)
 		l.tail = newNode
 	}
 	l.length++
@@ -73,13 +74,12 @@ func (l *List[T]) Prepend(values ...T) {
 }
 
 func (l *List[T]) prepend(value T) {
-	newNode := &node[T]{value: value}
+	newNode := &internal.Node[T]{Value: value}
 	if l.isEmpty() {
 		l.head = newNode
 		l.tail = newNode
 	} else {
-		newNode.right = l.head
-		l.head.left = newNode
+		newNode.Insert(l.head)
 		l.head = newNode
 	}
 	l.length++
@@ -103,9 +103,9 @@ func (l *List[T]) Insert(value T, after int) error {
 		return nil
 	}
 
-	newNode := &node[T]{value: value}
+	newNode := &internal.Node[T]{Value: value}
 	idxNode := l.getNode(after)
-	idxNode.insert(newNode)
+	idxNode.Insert(newNode)
 	l.length++
 
 	return nil
@@ -125,10 +125,10 @@ func (l *List[T]) All() iter.Seq2[int, T] {
 		curr := l.head
 		idx := 0
 		for curr != nil {
-			if !yield(idx, curr.value) {
+			if !yield(idx, curr.Value) {
 				break
 			}
-			curr = curr.right
+			curr = curr.Right
 			idx++
 		}
 	}
@@ -140,15 +140,15 @@ func (l *List[T]) All() iter.Seq2[int, T] {
 // and third it does not using [sync.Mutex] to lock access.
 // The [sync.Mutex] lock should only be called and managed by a public method to avoid
 // race condition and deadlock.
-func (l *List[T]) all() iter.Seq2[int, *node[T]] {
-	return func(yield func(int, *node[T]) bool) {
+func (l *List[T]) all() iter.Seq2[int, *internal.Node[T]] {
+	return func(yield func(int, *internal.Node[T]) bool) {
 		curr := l.head
 		idx := 0
 		for curr != nil {
 			if !yield(idx, curr) {
 				break
 			}
-			curr = curr.right
+			curr = curr.Right
 			idx++
 		}
 	}
@@ -168,10 +168,10 @@ func (l *List[T]) Backward() iter.Seq2[int, T] {
 		curr := l.tail
 		idx := l.length - 1
 		for curr != nil {
-			if !yield(idx, curr.value) {
+			if !yield(idx, curr.Value) {
 				break
 			}
-			curr = curr.left
+			curr = curr.Left
 			idx--
 		}
 	}
@@ -183,15 +183,15 @@ func (l *List[T]) Backward() iter.Seq2[int, T] {
 // and third it does not using [sync.Mutex] to lock access.
 // The [sync.Mutex] lock should only be called and managed by a public method to avoid
 // race condition and deadlock.
-func (l *List[T]) backward() iter.Seq2[int, *node[T]] {
-	return func(yield func(int, *node[T]) bool) {
+func (l *List[T]) backward() iter.Seq2[int, *internal.Node[T]] {
+	return func(yield func(int, *internal.Node[T]) bool) {
 		curr := l.tail
 		idx := l.length - 1
 		for curr != nil {
 			if !yield(idx, curr) {
 				break
 			}
-			curr = curr.left
+			curr = curr.Left
 			idx--
 		}
 	}
@@ -225,7 +225,7 @@ func (l *List[T]) Search(target T, equal func(value, target T) bool) (int, error
 	defer l.mu.RUnlock()
 
 	for idx, node := range l.all() {
-		if equal(node.value, target) {
+		if equal(node.Value, target) {
 			return idx, nil
 		}
 	}
@@ -246,7 +246,7 @@ func (l *List[T]) Index(at int) (T, error) {
 		return zeroValue, fmt.Errorf("failed to get value at index %d from list, cause by %w", at, err)
 	}
 
-	return l.getNode(at).value, nil
+	return l.getNode(at).Value, nil
 }
 
 // Pop removes and returns the last element of the list.
@@ -263,10 +263,10 @@ func (l *List[T]) Pop() (T, error) {
 }
 
 func (l *List[T]) pop() (T, error) {
-	value := l.tail.value
-	l.tail = l.tail.left
+	value := l.tail.Value
+	l.tail = l.tail.Left
 	if l.tail != nil {
-		l.tail.right = nil
+		l.tail.Right = nil
 	}
 
 	l.length--
@@ -293,10 +293,10 @@ func (l *List[T]) Dequeue() (T, error) {
 }
 
 func (l *List[T]) dequeue() (T, error) {
-	value := l.head.value
-	l.head = l.head.right
+	value := l.head.Value
+	l.head = l.head.Right
 	if l.head != nil {
-		l.head.left = nil
+		l.head.Left = nil
 	}
 
 	// Dequeued the last value
@@ -337,15 +337,15 @@ func (l *List[T]) Remove(at int) (T, error) {
 
 	// Get the node at the specified index and remove it
 	idxNode := l.getNode(at)
-	idxNode.unlink()
+	idxNode.Unlink()
 	l.length--
 
-	return idxNode.value, nil
+	return idxNode.Value, nil
 }
 
 // Get the node at the specified index, should be called after [checkIndex]
 // to avoid null pointer error.
-func (l *List[T]) getNode(at int) *node[T] {
+func (l *List[T]) getNode(at int) *internal.Node[T] {
 	// If the specified index in the left half of the list then
 	// we should iterate from head -> tail.
 	it := l.all
@@ -376,4 +376,16 @@ func (l *List[T]) checkIndex(at int) error {
 
 func (l *List[T]) isEmpty() bool {
 	return l.length == 0
+}
+
+// Return the head node of the [List].
+//
+// BUG(trviph): This function is needed for the cache package,
+// but leaks [internal.Node] to the users.
+// We could either find a way to remove this
+// or could just ignore this and leave it hear.
+func (l *List[T]) Head() *internal.Node[T] {
+	l.mu.RLock()
+	defer l.mu.RUnlock()
+	return l.head
 }

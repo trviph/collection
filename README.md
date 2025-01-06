@@ -4,9 +4,14 @@
 
 Collection is a Go library that aims to implement basic data structures such as List, Queue, Stack, Heap, and more.
 
-## Supported Data Structures
+## Data Structures
 
 - [Linked list](https://pkg.go.dev/github.com/trviph/collection#List) is implemented as a doubly linked list.
 - [Stack](https://pkg.go.dev/github.com/trviph/collection#Stack) is implemented by using linked list as the base.
 - [Queue](https://pkg.go.dev/github.com/trviph/collection#Queue) is implemented by using linked list as the base.
 - [Heap](https://pkg.go.dev/github.com/trviph/collection#Queue) is implemented by using [slice](https://go.dev/blog/slices-intro) as the base.
+
+## Caches
+
+- [LRU](https://pkg.go.dev/github.com/trviph/collection/cache#LRU) implemeted cache with LRU eviction policy.
+- [MRU](https://pkg.go.dev/github.com/trviph/collection/cache#MRU) implemeted cache with MRU eviction policy.
