@@ -16,12 +16,12 @@ type LRU[K comparable, T any] struct {
 	cap int
 
 	// To keep track and quickly look up which node is holding an entry by its key.
-	entries map[K]*internal.Node[*entry[K, T]]
+	entryNodes map[K]*internal.Node[*entry[K, T]]
 
 	// Keeping track of the recency of entries.
 	// Entries are ordered from most recently used to least recently used,
 	// going from head to tail.
-	recency *collection.List[*entry[K, T]]
+	entryRecency *collection.List[*entry[K, T]]
 }
 
 var _ internal.Cache[int, any] = (*LRU[int, any])(nil)
@@ -34,9 +34,9 @@ func NewLRU[K comparable, T any](cap int) (*LRU[K, T], error) {
 		return nil, fmt.Errorf("failed to create lru; cause by invalid specified capacity")
 	}
 	return &LRU[K, T]{
-		cap:     cap,
-		entries: make(map[K]*internal.Node[*entry[K, T]]),
-		recency: collection.NewList[*entry[K, T]](),
+		cap:          cap,
+		entryNodes:   make(map[K]*internal.Node[*entry[K, T]]),
+		entryRecency: collection.NewList[*entry[K, T]](),
 	}, nil
 }
 
@@ -57,49 +57,50 @@ func (c *LRU[K, T]) Put(key K, value T) {
 	defer c.mu.Unlock()
 
 	// If key already existed
-	if _, ok := c.entries[key]; ok {
+	if _, ok := c.entryNodes[key]; ok {
 		c.updateEntry(key, value)
 	} else {
 		c.newEntry(key, value)
 	}
-	c.tryDrop()
+
+	c.evict()
 }
 
-func (c *LRU[K, T]) tryDrop() {
-	if c.cap >= c.recency.Length() {
+func (c *LRU[K, T]) evict() {
+	if c.cap >= c.entryRecency.Length() {
 		return
 	}
-	entry, err := c.recency.Pop()
+	entry, err := c.entryRecency.Pop()
 	if err != nil {
 		// This should never happend
 		panic(
-			fmt.Errorf("something went very wrong; cannot drop LRU entry of cache with capacity of %d, entries lenght %d", c.cap, c.recency.Length()),
+			fmt.Errorf("something went very wrong; cannot drop LRU entry of cache with capacity of %d, entries length %d", c.cap, c.entryRecency.Length()),
 		)
 	}
 	// Delete entry from lookup map
-	delete(c.entries, entry.key)
+	delete(c.entryNodes, entry.key)
 }
 
 func (c *LRU[K, T]) newEntry(key K, value T) {
 	// Mark it as recently used
-	c.recency.Prepend(&entry[K, T]{key: key, value: value})
+	c.entryRecency.Prepend(&entry[K, T]{key: key, value: value})
 	// Add new entry to map
-	c.entries[key] = c.recency.Head()
+	c.entryNodes[key] = c.entryRecency.Head()
 }
 
 func (c *LRU[K, T]) updateEntry(key K, value T) {
 	// Get the node contains the entry
-	oldNode := c.entries[key]
+	oldNode := c.entryNodes[key]
 
 	// Push new value to the recency list
-	c.recency.Prepend(&entry[K, T]{key: key, value: value})
+	c.entryRecency.Prepend(&entry[K, T]{key: key, value: value})
 	// Update the entries map
-	c.entries[key] = c.recency.Head()
+	c.entryNodes[key] = c.entryRecency.Head()
 
 	// Remove the node from the recency list
 	// If oldNode is tail then Pop, else just unlink
 	if oldNode.Right == nil {
-		_, _ = c.recency.Pop()
+		_, _ = c.entryRecency.Pop()
 	} else {
 		oldNode.Unlink()
 	}
@@ -114,10 +115,10 @@ func (c *LRU[K, T]) Get(key K) (T, error) {
 	defer c.mu.Unlock()
 
 	var zeroValue T
-	if c.recency.Length() == 0 {
+	if c.entryRecency.Length() == 0 {
 		return zeroValue, collection.ErrIsEmpty
 	}
-	node, ok := c.entries[key]
+	node, ok := c.entryNodes[key]
 	if !ok {
 		return zeroValue, collection.ErrNotFound
 	}

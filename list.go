@@ -382,7 +382,8 @@ func (l *List[T]) isEmpty() bool {
 //
 // BUG(trviph): This function is needed for the cache package,
 // but leaks [internal.Node] to the users.
-// Should find way to remove this.
+// We could either find a way to remove this
+// or could just ignore this and leave it hear.
 func (l *List[T]) Head() *internal.Node[T] {
 	l.mu.RLock()
 	defer l.mu.RUnlock()
