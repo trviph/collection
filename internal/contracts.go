@@ -42,6 +42,6 @@ type Heap[T any] interface {
 }
 
 type Cache[K comparable, T any] interface {
-	Put(key K, value T) error
+	Put(key K, value T)
 	Get(key K) (T, error)
 }
