@@ -39,13 +39,13 @@ func MustNewLRU[K comparable, T any](cap int) *LRU[K, T] {
 
 // Put a new value with an associated key into the cache.
 // Update the value if the key already exist.
-// This mark the key as recently used.
+// This marks the key as recently used.
 func (c *LRU[K, T]) Put(key K, value T) {}
 
 // Get the value associated with the given key argument.
 // If there is no such key returns [collection.ErrNotFound],
 // or if the cache is empty then returns [collection.ErrIsEmpty].
-// This mark the key as recently used.
+// This marks the key as recently used.
 func (C *LRU[K, T]) Get(key K) (T, error) {
 	var zeroValue T
 	return zeroValue, collection.ErrIsEmpty
