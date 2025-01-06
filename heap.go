@@ -3,6 +3,8 @@ package collection
 import (
 	"fmt"
 	"sync"
+
+	"github.com/trviph/collection/internal"
 )
 
 // A [Heap] implemented using slice, a dynamic array implementation,  as the base.
@@ -15,7 +17,7 @@ type Heap[T any] struct {
 	cmp    func(T, T) bool
 }
 
-var _ heap[any] = (*Heap[any])(nil)
+var _ internal.Heap[any] = (*Heap[any])(nil)
 
 // [NewHeap] creates a new [Heap].
 // It takes a function that compares two values.

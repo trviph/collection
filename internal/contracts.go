@@ -1,10 +1,10 @@
-package collection
+package internal
 
 // This file contains interfaces to guarantee backward compatibility of the package.
 // We should only add to this file and not change or delete in it.
 import "iter"
 
-type list[T any] interface {
+type List[T any] interface {
 	Length() int
 	Append(values ...T)
 	Prepend(values ...T)
@@ -18,14 +18,14 @@ type list[T any] interface {
 	Remove(at int) (T, error)
 }
 
-type stack[T any] interface {
+type Stack[T any] interface {
 	Length() int
 	Push(values ...T)
 	Pop() (T, error)
 	Top() (T, error)
 }
 
-type queue[T any] interface {
+type Queue[T any] interface {
 	Length() int
 	Push(values ...T)
 	Dequeue() (T, error)
@@ -33,7 +33,7 @@ type queue[T any] interface {
 	Rear() (T, error)
 }
 
-type heap[T any] interface {
+type Heap[T any] interface {
 	Push(values ...T)
 	Pop() (T, error)
 	PushPop(value T) (T, error)
@@ -41,7 +41,7 @@ type heap[T any] interface {
 	IsEmpty() bool
 }
 
-type cache[K comparable, T any] interface {
+type Cache[K comparable, T any] interface {
 	Put(key K, value T) error
 	Get(key K) (T, error)
 }

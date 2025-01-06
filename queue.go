@@ -3,6 +3,8 @@ package collection
 import (
 	"fmt"
 	"sync"
+
+	"github.com/trviph/collection/internal"
 )
 
 // A first-in-first-out [Queue] implemented by using [List] as the base.
@@ -13,7 +15,7 @@ type Queue[T any] struct {
 }
 
 // Interface guard
-var _ queue[any] = (*Queue[any])(nil)
+var _ internal.Queue[any] = (*Queue[any])(nil)
 
 // [NewQueue] creates a new [Queue] of type T.
 func NewQueue[T any](values ...T) *Queue[T] {
