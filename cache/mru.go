@@ -8,10 +8,10 @@ import (
 	"github.com/trviph/collection/internal"
 )
 
-// A cache using the Least Recently Used eviction policy.
+// A cache using the Most Recently Used eviction policy.
 //
-// [Least Recently Used (LRU)]: https://en.wikipedia.org/wiki/Cache_replacement_policies#Least_Recently_Used_(LRU)
-type LRU[K comparable, T any] struct {
+// [Most Recently Used (MRU)]: https://en.wikipedia.org/wiki/Cache_replacement_policies#Most-recently-used_(MRU)
+type MRU[K comparable, T any] struct {
 	mu  sync.Mutex
 	cap int
 
@@ -24,27 +24,27 @@ type LRU[K comparable, T any] struct {
 	entryRecency *collection.List[*entry[K, T]]
 }
 
-var _ internal.Cache[int, any] = (*LRU[int, any])(nil)
+var _ internal.Cache[int, any] = (*MRU[int, any])(nil)
 
 // [NewLRU] creates a new cache with [LRU] eviction policy.
 // It accepts cap as the only argument, specifying the maximum capacity of the cache.
 // Return an error if cap is less than 1.
-func NewLRU[K comparable, T any](cap int) (*LRU[K, T], error) {
+func NewMRU[K comparable, T any](cap int) (*MRU[K, T], error) {
 	if cap < 1 {
-		return nil, fmt.Errorf("failed to create lru; cause by invalid specified capacity")
+		return nil, fmt.Errorf("failed to create mru; cause by invalid specified capacity")
 	}
-	return &LRU[K, T]{
+	return &MRU[K, T]{
 		cap:          cap,
 		entryNodes:   make(map[K]*internal.Node[*entry[K, T]]),
 		entryRecency: collection.NewList[*entry[K, T]](),
 	}, nil
 }
 
-// Like [NewLRU] but will panic on error.
-func MustNewLRU[K comparable, T any](cap int) *LRU[K, T] {
+// Like [NewMRU] but will panic on error.
+func MustNewMRU[K comparable, T any](cap int) *MRU[K, T] {
 	return collection.Must(
-		func() (*LRU[K, T], error) {
-			return NewLRU[K, T](cap)
+		func() (*MRU[K, T], error) {
+			return NewMRU[K, T](cap)
 		},
 	)
 }
@@ -52,7 +52,7 @@ func MustNewLRU[K comparable, T any](cap int) *LRU[K, T] {
 // Put a new value with an associated key into the cache.
 // Update the value if the key already exist.
 // This marks the key as recently used.
-func (c *LRU[K, T]) Put(key K, value T) {
+func (c *MRU[K, T]) Put(key K, value T) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
@@ -65,11 +65,11 @@ func (c *LRU[K, T]) Put(key K, value T) {
 	}
 }
 
-func (c *LRU[K, T]) evict() {
+func (c *MRU[K, T]) evict() {
 	if c.cap > c.entryRecency.Length() {
 		return
 	}
-	entry, err := c.entryRecency.Pop()
+	entry, err := c.entryRecency.Dequeue()
 	if err != nil {
 		// This should never happend
 		panic(
@@ -80,14 +80,14 @@ func (c *LRU[K, T]) evict() {
 	delete(c.entryNodes, entry.key)
 }
 
-func (c *LRU[K, T]) newEntry(key K, value T) {
+func (c *MRU[K, T]) newEntry(key K, value T) {
 	// Mark it as recently used
 	c.entryRecency.Prepend(&entry[K, T]{key: key, value: value})
 	// Add new entry to map
 	c.entryNodes[key] = c.entryRecency.Head()
 }
 
-func (c *LRU[K, T]) updateEntry(key K, value T) {
+func (c *MRU[K, T]) updateEntry(key K, value T) {
 	// Get the node contains the entry
 	oldNode := c.entryNodes[key]
 
@@ -109,7 +109,7 @@ func (c *LRU[K, T]) updateEntry(key K, value T) {
 // If there is no such key returns [collection.ErrNotFound],
 // or if the cache is empty then returns [collection.ErrIsEmpty].
 // This marks the key as recently used.
-func (c *LRU[K, T]) Get(key K) (T, error) {
+func (c *MRU[K, T]) Get(key K) (T, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
