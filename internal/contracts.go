@@ -1,7 +1,7 @@
 package internal
 
 // This file contains interfaces to guarantee backward compatibility of the package.
-// We should only add to this file and not change or delete in it.
+// You should only add to this file and not change or delete in it.
 import "iter"
 
 type List[T any] interface {

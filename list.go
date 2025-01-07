@@ -380,10 +380,10 @@ func (l *List[T]) isEmpty() bool {
 
 // Return the head node of the [List].
 //
-// BUG(trviph): This function is needed for the cache package,
-// but leaks [internal.Node] to the users.
+// BUG(trviph): This function is needed by the cache package,
+// but is leaks [internal.Node] to the users.
 // We could either find a way to remove this
-// or could just ignore this and leave it hear.
+// or could just ignore this.
 func (l *List[T]) Head() *internal.Node[T] {
 	l.mu.RLock()
 	defer l.mu.RUnlock()

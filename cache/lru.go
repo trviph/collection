@@ -15,12 +15,11 @@ type LRU[K comparable, T any] struct {
 	mu  sync.Mutex
 	cap int
 
-	// To keep track and quickly look up which node is holding an entry by its key.
+	// Keeping track of which *internal.Node is holding an entry by its key.
 	entryNodes map[K]*internal.Node[*entry[K, T]]
 
 	// Keeping track of the recency of entries.
-	// Entries are ordered from most recently used to least recently used,
-	// going from head to tail.
+	// Entries are ordered from most recently used to least recently used, going from head to tail.
 	entryRecency *collection.List[*entry[K, T]]
 }
 
@@ -28,7 +27,7 @@ var _ internal.Cache[int, any] = (*LRU[int, any])(nil)
 
 // [NewLRU] creates a new cache with [LRU] eviction policy.
 // It accepts cap as the only argument, specifying the maximum capacity of the cache.
-// Return an error if cap is less than 1.
+// It will return an error if cap is less than 1.
 func NewLRU[K comparable, T any](cap int) (*LRU[K, T], error) {
 	if cap < 1 {
 		return nil, fmt.Errorf("failed to create lru; cause by invalid specified capacity")
@@ -50,8 +49,7 @@ func MustNewLRU[K comparable, T any](cap int) *LRU[K, T] {
 }
 
 // Put a new value with an associated key into the cache.
-// Update the value if the key already exist.
-// This marks the key as recently used.
+// This will update the value if the key already exist.
 func (c *LRU[K, T]) Put(key K, value T) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -76,7 +74,7 @@ func (c *LRU[K, T]) evict() {
 			fmt.Errorf("something went very wrong; cannot drop LRU entry of cache with capacity of %d, entries length %d", c.cap, c.entryRecency.Length()),
 		)
 	}
-	// Delete entry from lookup map
+	// Delete the entry from lookup map
 	delete(c.entryNodes, entry.key)
 }
 
@@ -106,9 +104,8 @@ func (c *LRU[K, T]) updateEntry(key K, value T) {
 }
 
 // Get the value associated with the given key argument.
-// If there is no such key returns [collection.ErrNotFound],
-// or if the cache is empty then returns [collection.ErrIsEmpty].
-// This marks the key as recently used.
+// Get will return [collection.ErrNotFound] if there is no such key,
+// or [collection.ErrIsEmpty] if the cache is empty.
 func (c *LRU[K, T]) Get(key K) (T, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
